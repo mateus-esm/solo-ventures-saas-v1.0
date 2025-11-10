@@ -19,7 +19,7 @@ const Login = () => {
     // Simple validation for MVP
     if (email && password) {
       toast.success("Login bem-sucedido!");
-      navigate("/chat");
+      navigate("/home");
     } else {
       toast.error("Por favor, preencha todos os campos.");
     }
