@@ -14,7 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      equipes: {
+        Row: {
+          created_at: string
+          crm_link: string
+          id: string
+          nome_cliente: string
+          suporte_link: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          crm_link: string
+          id?: string
+          nome_cliente: string
+          suporte_link: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          crm_link?: string
+          id?: string
+          nome_cliente?: string
+          suporte_link?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          chat_link_base: string
+          created_at: string
+          email: string
+          equipe_id: string
+          id: string
+          nome_completo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chat_link_base: string
+          created_at?: string
+          email: string
+          equipe_id: string
+          id?: string
+          nome_completo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chat_link_base?: string
+          created_at?: string
+          email?: string
+          equipe_id?: string
+          id?: string
+          nome_completo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

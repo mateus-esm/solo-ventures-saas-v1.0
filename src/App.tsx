@@ -3,6 +3,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AppSidebar } from "@/components/AppSidebar";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Chat from "./pages/Chat";
@@ -13,25 +17,84 @@ import { WhatsAppButton } from "./components/WhatsAppButton";
 
 const queryClient = new QueryClient();
 
+const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => (
+  <SidebarProvider>
+    <div className="min-h-screen flex w-full bg-background">
+      <AppSidebar />
+      <div className="flex-1 flex flex-col">
+        <header className="h-14 flex items-center border-b border-border bg-background px-4 shrink-0">
+          <SidebarTrigger />
+        </header>
+        <main className="flex-1 flex flex-col overflow-hidden">
+          {children}
+        </main>
+        <footer className="border-t border-border bg-background shrink-0">
+          <div className="container mx-auto px-4 py-3 text-center text-sm text-muted-foreground">
+            © 2025 Solo Ventures — Powering Intelligent Operations ⚡
+          </div>
+        </footer>
+      </div>
+    </div>
+    <WhatsAppButton />
+  </SidebarProvider>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <WhatsAppButton />
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/crm" element={<CRM />} />
-          <Route path="/suporte" element={<Suporte />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/home"
+              element={
+                <ProtectedRoute>
+                  <AuthenticatedLayout>
+                    <Home />
+                  </AuthenticatedLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute>
+                  <AuthenticatedLayout>
+                    <Chat />
+                  </AuthenticatedLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/crm"
+              element={
+                <ProtectedRoute>
+                  <AuthenticatedLayout>
+                    <CRM />
+                  </AuthenticatedLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/suporte"
+              element={
+                <ProtectedRoute>
+                  <AuthenticatedLayout>
+                    <Suporte />
+                  </AuthenticatedLayout>
+                </ProtectedRoute>
+              }
+            />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
