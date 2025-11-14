@@ -3,9 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f97316" />
     <title>AdvAI Portal — Solo Ventures</title>
-    <meta name="description" content="Assistente Jurídico Inteligente powered by Solo Ventures. Atendimento automatizado e qualificação de leads para o escritório Dr. Walter Inglez.">
+    <meta name="description" content="Portal de IA Jurídica - Assistente Inteligente powered by Solo Ventures">
     <meta name="author" content="Solo Ventures" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/solo-ventures-icon-192.png" />
 
     
     
@@ -25,5 +28,15 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Register service worker for PWA
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => console.log('SW registered:', registration))
+            .catch(err => console.log('SW registration failed:', err));
+        });
+      }
+    </script>
   </body>
 </html>

@@ -1,4 +1,4 @@
-import { Home, MessageCircle, LayoutDashboard, HelpCircle, LogOut, ExternalLink } from "lucide-react";
+import { Home, MessageCircle, LayoutDashboard, HelpCircle, LogOut, ExternalLink, CreditCard, BarChart3 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/solo-ventures-logo.png";
@@ -27,6 +27,7 @@ export function AppSidebar() {
 
   const menuItems = [
     { title: "Início", url: "/home", icon: Home, external: false },
+    { title: "Dashboard", url: "/dashboard", icon: BarChart3, external: false },
     {
       title: "Chat AdvAI",
       url: isExternalChatLink ? chatHref : chatHref || "/chat",
@@ -34,6 +35,7 @@ export function AppSidebar() {
       external: isExternalChatLink,
     },
     { title: "CRM", url: "/crm", icon: LayoutDashboard, external: false },
+    { title: "Billing", url: "/billing", icon: CreditCard, external: false },
     { title: "Suporte", url: "/suporte", icon: HelpCircle, external: false },
   ];
 
