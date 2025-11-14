@@ -12,6 +12,8 @@ import Home from "./pages/Home";
 import Chat from "./pages/Chat";
 import CRM from "./pages/CRM";
 import Suporte from "./pages/Suporte";
+import Dashboard from "./pages/Dashboard";
+import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
 import { WhatsAppButton } from "./components/WhatsAppButton";
 
@@ -60,6 +62,16 @@ const App = () => (
               }
             />
             <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <AuthenticatedLayout>
+                    <Dashboard />
+                  </AuthenticatedLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/chat"
               element={
                 <ProtectedRoute>
@@ -75,6 +87,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AuthenticatedLayout>
                     <CRM />
+                  </AuthenticatedLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/billing"
+              element={
+                <ProtectedRoute>
+                  <AuthenticatedLayout>
+                    <Billing />
                   </AuthenticatedLayout>
                 </ProtectedRoute>
               }

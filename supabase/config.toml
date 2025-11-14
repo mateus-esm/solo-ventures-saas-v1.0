@@ -1,1 +1,7 @@
 project_id = "vnyxjnvbdpawsrdwmsqc"
+
+[functions.fetch-gpt-credits]
+verify_jwt = true
+
+[functions.fetch-jestor-kpis]
+verify_jwt = true
