@@ -78,7 +78,7 @@ serve(async (req) => {
     }
 
     const leadsData = await leadsResponse.json();
-    const leads = leadsData.data || [];
+    const leads = leadsData.data.items || [];
 
     const currentMonthLeads = leads.filter((lead: any) => {
       if (!lead.criado_em) return false;
