@@ -1,7 +1,7 @@
 import { Home, MessageCircle, LayoutDashboard, HelpCircle, LogOut, ExternalLink, CreditCard, BarChart3, BookOpen } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
-import logo from "@/assets/solo-ventures-logo.png";
+import { Logo } from "@/components/Logo"; 
 import icon from "@/assets/solo-ventures-icon.png";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar } from "@/components/ui/sidebar";
 
@@ -24,9 +24,11 @@ export function AppSidebar() {
   return (
     <Sidebar className={open ? "w-64" : "w-16"} collapsible="icon">
       <SidebarHeader className="border-b border-border p-4">
-        <div className="flex items-center justify-center">
-          {open ? (
-            <img src={logo} alt="Solo Ventures" className="h-10" />
+        <Logo className="h-10" />
+  ) : (
+    <img src={icon} alt="Solo Ventures" className="h-8 w-8 shrink-0" />
+  )}
+</div>
           ) : (
             <img src={icon} alt="Solo Ventures" className="h-8 w-8 shrink-0" />
           )}
