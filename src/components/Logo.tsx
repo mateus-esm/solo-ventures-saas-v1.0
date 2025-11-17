@@ -16,11 +16,13 @@ export const Logo = ({ className = "h-8", alt = "Solo Ventures" }: LogoProps) =>
     setMounted(true);
   }, []);
 
+  // Render light logo initially to avoid flash
   if (!mounted) {
     return <img src={logoDark} alt={alt} className={className} />;
   }
 
   const currentTheme = theme === "system" ? systemTheme : theme;
+  // Use light logo (white) for dark mode, dark logo for light mode
   const logoSrc = currentTheme === "dark" ? logoLight : logoDark;
 
   return <img src={logoSrc} alt={alt} className={className} />;
