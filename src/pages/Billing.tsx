@@ -76,7 +76,7 @@ const Billing = () => {
   const handleRecharge = () => {
     const totalCost = (selectedCredits / 500) * 40;
     const message = `Olá! Gostaria de recarregar ${selectedCredits.toLocaleString()} créditos AdvAI (R$ ${totalCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`;
-    window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(message)}`, '_blank');
+    window.open(`https://wa.me/5585996487923?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   useEffect(() => {
@@ -331,7 +331,7 @@ const Billing = () => {
                   className="w-full"
                   onClick={() => {
                     const message = "Olá! Gostaria de fazer upgrade para o plano Solo Starter (R$ 150/mês)";
-                    window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(message)}`, '_blank');
+                    window.open(`https://wa.me/5585996487923?text=${encodeURIComponent(message)}`, '_blank');
                   }}
                 >
                   Fazer Upgrade
@@ -370,7 +370,7 @@ const Billing = () => {
                   className="w-full"
                   onClick={() => {
                     const message = "Olá! Gostaria de fazer upgrade para o plano Solo Scale (R$ 400/mês)";
-                    window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(message)}`, '_blank');
+                    window.open(`https://wa.me/5585996487923?text=${encodeURIComponent(message)}`, '_blank');
                   }}
                 >
                   Fazer Upgrade
@@ -406,7 +406,7 @@ const Billing = () => {
                   className="w-full"
                   onClick={() => {
                     const message = "Olá! Gostaria de fazer upgrade para o plano Solo Pro (R$ 1.000/mês)";
-                    window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(message)}`, '_blank');
+                    window.open(`https://wa.me/5585996487923?text=${encodeURIComponent(message)}`, '_blank');
                   }}
                 >
                   Fazer Upgrade

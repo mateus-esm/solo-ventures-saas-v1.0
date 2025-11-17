@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import logo from "@/assets/solo-ventures-logo.png";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { Logo } from "@/components/Logo";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -56,7 +56,7 @@ const Login = () => {
         <CardHeader className="space-y-6 text-center">
           <div className="flex justify-center">
             <div className="relative">
-              <img src={logo} alt="Solo Ventures" className="h-12" />
+              <Logo className="h-12" />
               <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent blur-xl" />
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import logo from "@/assets/solo-ventures-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { ModeToggle } from "@/components/ModeToggle";
+import { Logo } from "@/components/Logo";
 
 export const Header = () => {
   const { profile } = useAuth();
@@ -12,7 +12,7 @@ export const Header = () => {
     <header className="border-b border-border bg-background sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/home" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-          <img src={logo} alt="Solo Ventures" className="h-8" />
+          <Logo className="h-8" />
         </Link>
         <nav className="flex items-center gap-4">
           <Link
