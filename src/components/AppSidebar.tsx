@@ -24,9 +24,12 @@ export function AppSidebar() {
   return (
     <Sidebar className={open ? "w-64" : "w-16"} collapsible="icon">
       <SidebarHeader className="border-b border-border p-4">
-        <div className="flex items-center gap-3">
-          <img src={icon} alt="Solo Ventures" className="h-8 w-8 shrink-0" />
-          {open && <img src={logo} alt="Solo Ventures" className="h-6" />}
+        <div className="flex items-center justify-center">
+          {open ? (
+            <img src={logo} alt="Solo Ventures" className="h-10" />
+          ) : (
+            <img src={icon} alt="Solo Ventures" className="h-8 w-8 shrink-0" />
+          )}
         </div>
       </SidebarHeader>
       <SidebarContent>

@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
 import { Zap, TrendingUp, Loader2, RefreshCcw, ExternalLink, MessageCircle, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,6 +27,7 @@ const Billing = () => {
   const [creditData, setCreditData] = useState<CreditData | null>(null);
   const [plano, setPlano] = useState<Plano | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedCredits, setSelectedCredits] = useState<number>(1000);
   const { toast } = useToast();
 
   const fetchCredits = async () => {
@@ -71,11 +73,9 @@ const Billing = () => {
   };
 
   const handleRecharge = () => {
-    // Option A: WhatsApp (simple)
-    window.open('https://wa.me/5511999999999?text=Olá! Gostaria de recarregar meus créditos AdvAI', '_blank');
-    
-    // Option B: Stripe (requires setup)
-    // Will be implemented when user decides to integrate Stripe
+    const totalCost = (selectedCredits / 500) * 40;
+    const message = `Olá! Gostaria de recarregar ${selectedCredits.toLocaleString()} créditos AdvAI (R$ ${totalCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`;
+    window.open(`https://wa.me/5511999999999?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   useEffect(() => {
@@ -232,25 +232,63 @@ const Billing = () => {
           </CardContent>
         </Card>
 
+        {/* Credit Simulator */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Simulador de Créditos</CardTitle>
+            <CardDescription>Calcule o custo de créditos extras (R$ 40,00 a cada 500 créditos)</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Quantidade de Créditos</label>
+                <span className="text-2xl font-bold text-primary">{selectedCredits.toLocaleString()}</span>
+              </div>
+              <Slider
+                value={[selectedCredits]}
+                onValueChange={(value) => setSelectedCredits(value[0])}
+                min={500}
+                max={10000}
+                step={500}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>500</span>
+                <span>10.000</span>
+              </div>
+            </div>
+
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm text-muted-foreground">Valor Total</span>
+                <span className="text-3xl font-bold text-foreground">
+                  R$ {((selectedCredits / 500) * 40).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+              <Button onClick={handleRecharge} className="w-full" size="lg">
+                <MessageCircle className="h-5 w-5 mr-2" />
+                Solicitar via WhatsApp
+              </Button>
+              <p className="text-xs text-muted-foreground mt-3 text-center">
+                💡 A mensagem será gerada automaticamente com o valor calculado
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Recharge Options */}
         <Card>
           <CardHeader>
-            <CardTitle>Recarregar Créditos</CardTitle>
-            <CardDescription>Adicione créditos extras além do seu plano mensal</CardDescription>
+            <CardTitle>Outras Opções de Pagamento</CardTitle>
+            <CardDescription>Métodos adicionais para recarregar créditos</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button onClick={handleRecharge} className="flex-1" size="lg">
-                <MessageCircle className="h-5 w-5 mr-2" />
-                Recarregar via WhatsApp
-              </Button>
-              <Button variant="outline" className="flex-1" size="lg" disabled>
-                <CreditCard className="h-5 w-5 mr-2" />
-                Pagamento Online (Em breve)
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-4">
-              💡 Dica: Entre em contato conosco para pacotes personalizados de créditos
+            <Button variant="outline" className="w-full" size="lg" disabled>
+              <CreditCard className="h-5 w-5 mr-2" />
+              Pagamento Online (Em breve)
+            </Button>
+            <p className="text-xs text-muted-foreground mt-4 text-center">
+              💡 Em breve você poderá fazer recarga diretamente via cartão ou PIX
             </p>
           </CardContent>
         </Card>
