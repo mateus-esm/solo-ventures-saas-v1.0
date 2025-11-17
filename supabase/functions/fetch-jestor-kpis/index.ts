@@ -45,10 +45,21 @@ serve(async (req) => {
     }
 
     const jestorToken = equipe.jestor_api_token;
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    const periodo = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}`;
+    
+    // Parse request body for custom date range
+    let requestBody: any = {};
+    try {
+      requestBody = await req.json();
+    } catch {
+      // If no body, use current month
+    }
+    
+    const targetMonth = requestBody.month ? parseInt(requestBody.month) : new Date().getMonth() + 1;
+    const targetYear = requestBody.year ? parseInt(requestBody.year) : new Date().getFullYear();
+    
+    const firstDay = new Date(targetYear, targetMonth - 1, 1);
+    const lastDay = new Date(targetYear, targetMonth, 0);
+    const periodo = `${targetYear}-${targetMonth.toString().padStart(2, '0')}`;
 
     console.log(`[Jestor] Buscando dados para o período: ${periodo}`);
 

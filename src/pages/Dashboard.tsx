@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { TrendingUp, Users, Calendar, DollarSign, Loader2 } from "lucide-react";
+import { TrendingUp, Users, Calendar, DollarSign, Loader2, RefreshCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface KPIData {
@@ -19,11 +21,20 @@ const Dashboard = () => {
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  
+  const currentDate = new Date();
+  const [selectedMonth, setSelectedMonth] = useState<string>((currentDate.getMonth() + 1).toString());
+  const [selectedYear, setSelectedYear] = useState<string>(currentDate.getFullYear().toString());
 
-  const fetchKPIs = async () => {
+  const fetchKPIs = async (month?: string, year?: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.functions.invoke('fetch-jestor-kpis');
+      const { data, error } = await supabase.functions.invoke('fetch-jestor-kpis', {
+        body: { 
+          month: month || selectedMonth, 
+          year: year || selectedYear 
+        }
+      });
 
       if (error) throw error;
 
@@ -43,6 +54,16 @@ const Dashboard = () => {
   useEffect(() => {
     fetchKPIs();
   }, []);
+  
+  const handleMonthChange = (month: string) => {
+    setSelectedMonth(month);
+    fetchKPIs(month, selectedYear);
+  };
+  
+  const handleYearChange = (year: string) => {
+    setSelectedYear(year);
+    fetchKPIs(selectedMonth, year);
+  };
 
   if (loading) {
     return (
@@ -69,12 +90,45 @@ const Dashboard = () => {
     <div className="flex-1 flex flex-col">
       <div className="border-b border-border bg-gradient-to-r from-background to-soft-gray">
         <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold text-foreground">
-            Dashboard <span className="text-primary">Performance</span>
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Análise de Performance do Agente AdvAI • {kpiData?.periodo}
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">
+                Dashboard <span className="text-primary">Performance</span>
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Análise de Performance do Agente AdvAI • {kpiData?.periodo}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={selectedMonth} onValueChange={handleMonthChange}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((month) => (
+                    <SelectItem key={month} value={month.toString()}>
+                      {new Date(2000, month - 1).toLocaleDateString('pt-BR', { month: 'long' })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedYear} onValueChange={handleYearChange}>
+                <SelectTrigger className="w-28">
+                  <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - i).map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={() => fetchKPIs()} variant="outline" size="icon">
+                <RefreshCcw className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
