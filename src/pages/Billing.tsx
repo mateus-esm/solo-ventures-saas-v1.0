@@ -444,7 +444,7 @@ const Billing = () => {
               <CardContent className="space-y-4">
                 <div>
                   <p className="text-4xl font-bold text-foreground">
-                    R$ 150<span className="text-lg font-normal text-muted-foreground">/mês</span>
+                    R$ 200<span className="text-lg font-normal text-muted-foreground">/mês</span>
                   </p>
                 </div>
                 
