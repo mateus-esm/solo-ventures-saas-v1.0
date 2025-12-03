@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { TenantProvider, useTenant } from "@/contexts/TenantContext";
+import { useTenantTheme } from "@/hooks/useTenantTheme";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ModeToggle } from "@/components/ModeToggle";
@@ -22,38 +24,44 @@ import { WhatsAppButton } from "./components/WhatsAppButton";
 
 const queryClient = new QueryClient();
 
-const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => (
-  <SidebarProvider>
-    <div className="min-h-screen flex w-full bg-background">
-      <AppSidebar />
-      <div className="flex-1 flex flex-col">
-        <header className="h-14 flex items-center justify-between border-b border-border bg-background px-4 shrink-0">
-          <SidebarTrigger />
-          <ModeToggle />
-        </header>
-        <main className="flex-1 flex flex-col overflow-hidden">
-          {children}
-        </main>
-        <footer className="border-t border-border bg-header-bg shrink-0">
-          <div className="container mx-auto px-4 py-3 text-center text-sm text-foreground/70 font-medium">
-            © 2025 Solo Ventures. Todos os direitos reservados. | AdvAI é uma plataforma proprietária.
-          </div>
-        </footer>
+const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
+  const { tenant } = useTenant();
+  useTenantTheme();
+  
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AppSidebar />
+        <div className="flex-1 flex flex-col">
+          <header className="h-14 flex items-center justify-between border-b border-border bg-background px-4 shrink-0">
+            <SidebarTrigger />
+            <ModeToggle />
+          </header>
+          <main className="flex-1 flex flex-col overflow-hidden">
+            {children}
+          </main>
+          <footer className="border-t border-border bg-header-bg shrink-0">
+            <div className="container mx-auto px-4 py-3 text-center text-sm text-foreground/70 font-medium">
+              © 2025 Solo Ventures. Todos os direitos reservados. | {tenant.name} é uma plataforma proprietária.
+            </div>
+          </footer>
+        </div>
       </div>
-    </div>
-    <WhatsAppButton />
-  </SidebarProvider>
-);
+      <WhatsAppButton />
+    </SidebarProvider>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-          <Routes>
+    <TenantProvider>
+      <AuthProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+            <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route
@@ -127,12 +135,13 @@ const App = () => (
               }
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-      </ThemeProvider>
-    </AuthProvider>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </TenantProvider>
   </QueryClientProvider>
 );
 

@@ -6,7 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { Logo } from "@/components/Logo";
+import { TenantLogo } from "@/components/TenantLogo";
+import { useTenant } from "@/contexts/TenantContext";
+import { useTenantTheme } from "@/hooks/useTenantTheme";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -14,6 +16,8 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { signIn, user } = useAuth();
+  const { tenant } = useTenant();
+  useTenantTheme();
 
   useEffect(() => {
     if (user) {
@@ -56,14 +60,14 @@ const Login = () => {
         <CardHeader className="space-y-6 text-center">
           <div className="flex justify-center">
             <div className="relative">
-              <Logo className="h-12" />
+              <TenantLogo className="h-12" />
               <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent blur-xl" />
             </div>
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">AdvAI Portal</CardTitle>
+            <CardTitle className="text-2xl font-bold">{tenant.name} Portal</CardTitle>
             <CardDescription className="text-muted-foreground mt-2">
-              Assistente Jurídico Inteligente
+              {tenant.description}
               <br />
               <span className="text-xs text-primary font-medium">Powered by Solo Ventures ⚡</span>
             </CardDescription>

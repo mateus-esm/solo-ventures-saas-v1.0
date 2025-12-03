@@ -2,18 +2,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MessageCircle, LayoutDashboard, Headphones } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenant } from "@/contexts/TenantContext";
 
 const Home = () => {
   const { profile, equipe } = useAuth();
+  const { tenant } = useTenant();
   const chatHref = profile?.chat_link_base || "/chat";
   const isExternalChatLink = chatHref.startsWith("http");
+
+  const defaultExplanation = `O ${tenant.name} é a inteligência proprietária da Solo Ventures projetada para escalar sua operação. Monitore os atendimentos do agente, gerencie seu pipeline e potencialize seus resultados com nossa tecnologia.`;
 
   return (
     <div className="flex-1 flex flex-col bg-background">
       <div className="border-b border-border bg-header-bg">
         <div className="container mx-auto px-4 py-6">
           <h1 className="text-3xl font-bold text-foreground text-center">
-            AdvAI <span className="text-primary">— {equipe?.nome_cliente || 'Assistente'}</span>
+            {tenant.name} <span className="text-primary">— {equipe?.nome_cliente || 'Assistente'}</span>
           </h1>
           <p className="text-sm text-foreground/70 mt-2 text-center font-medium">
             {profile?.nome_completo} • Powered by Solo Ventures ⚡
@@ -27,7 +31,7 @@ const Home = () => {
             <Card className="border-primary/20 bg-card">
               <CardContent className="p-6">
                 <p className="text-center text-foreground/80 leading-relaxed font-medium">
-                  {equipe?.home_explanation || "O AdvAI é a inteligência proprietária da Solo Ventures projetada para escalar sua operação jurídica. Monitore os atendimentos do agente, gerencie seu pipeline e potencialize seus resultados com nossa tecnologia."}
+                  {equipe?.home_explanation || defaultExplanation}
                 </p>
               </CardContent>
             </Card>
@@ -52,7 +56,7 @@ const Home = () => {
                       </div>
                       <h2 className="text-2xl font-bold text-foreground mb-2">Central de Atendimento</h2>
                       <p className="text-sm text-muted-foreground">
-                        Acompanhe a performance do AdvAI em tempo real e gerencie interações
+                        Acompanhe a performance do {tenant.name} em tempo real e gerencie interações
                       </p>
                     </CardContent>
                   </Card>
@@ -66,7 +70,7 @@ const Home = () => {
                       </div>
                       <h2 className="text-2xl font-bold text-foreground mb-2">Central de Atendimento</h2>
                       <p className="text-sm text-muted-foreground">
-                        Acompanhe a performance do AdvAI em tempo real e gerencie interações
+                        Acompanhe a performance do {tenant.name} em tempo real e gerencie interações
                       </p>
                     </CardContent>
                   </Card>
