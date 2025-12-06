@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.asaas-buy-credits]
 verify_jwt = true
+
+[functions.gpt-maker-webhook]
+verify_jwt = false
