@@ -14,7 +14,303 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      equipes: {
+        Row: {
+          asaas_customer_id: string | null
+          created_at: string
+          creditos_avulsos: number | null
+          gpt_maker_agent_id: string | null
+          id: string
+          limite_creditos: number | null
+          niche: string | null
+          nome: string
+          updated_at: string
+          webhook_secret: string | null
+        }
+        Insert: {
+          asaas_customer_id?: string | null
+          created_at?: string
+          creditos_avulsos?: number | null
+          gpt_maker_agent_id?: string | null
+          id?: string
+          limite_creditos?: number | null
+          niche?: string | null
+          nome: string
+          updated_at?: string
+          webhook_secret?: string | null
+        }
+        Update: {
+          asaas_customer_id?: string | null
+          created_at?: string
+          creditos_avulsos?: number | null
+          gpt_maker_agent_id?: string | null
+          id?: string
+          limite_creditos?: number | null
+          niche?: string | null
+          nome?: string
+          updated_at?: string
+          webhook_secret?: string | null
+        }
+        Relationships: []
+      }
+      lead_activities: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          lead_id: string
+          metadata: Json | null
+          tipo: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          lead_id: string
+          metadata?: Json | null
+          tipo: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          lead_id?: string
+          metadata?: Json | null
+          tipo?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          atendido_por_agente: boolean | null
+          created_at: string
+          custom_fields: Json | null
+          email: string | null
+          equipe_id: string
+          id: string
+          interaction_id: string | null
+          meeting_done: boolean | null
+          meeting_scheduled: boolean | null
+          name: string
+          next_contact: string | null
+          no_show: boolean | null
+          observations: string | null
+          opportunity_value: number | null
+          origem: string | null
+          phone: string | null
+          source: string | null
+          stage_id: string | null
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          atendido_por_agente?: boolean | null
+          created_at?: string
+          custom_fields?: Json | null
+          email?: string | null
+          equipe_id: string
+          id?: string
+          interaction_id?: string | null
+          meeting_done?: boolean | null
+          meeting_scheduled?: boolean | null
+          name: string
+          next_contact?: string | null
+          no_show?: boolean | null
+          observations?: string | null
+          opportunity_value?: number | null
+          origem?: string | null
+          phone?: string | null
+          source?: string | null
+          stage_id?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          atendido_por_agente?: boolean | null
+          created_at?: string
+          custom_fields?: Json | null
+          email?: string | null
+          equipe_id?: string
+          id?: string
+          interaction_id?: string | null
+          meeting_done?: boolean | null
+          meeting_scheduled?: boolean | null
+          name?: string
+          next_contact?: string | null
+          no_show?: boolean | null
+          observations?: string | null
+          opportunity_value?: number | null
+          origem?: string | null
+          phone?: string | null
+          source?: string | null
+          stage_id?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "pipeline_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pipeline_stages: {
+        Row: {
+          color: string
+          created_at: string
+          equipe_id: string
+          id: string
+          is_default: boolean
+          name: string
+          position: number
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          equipe_id: string
+          id?: string
+          is_default?: boolean
+          name: string
+          position?: number
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          equipe_id?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_stages_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          cargo: string | null
+          chat_link_base: string | null
+          cpf: string | null
+          created_at: string
+          email: string | null
+          equipe_id: string | null
+          id: string
+          nome_completo: string | null
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          cargo?: string | null
+          chat_link_base?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          equipe_id?: string | null
+          id: string
+          nome_completo?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cargo?: string | null
+          chat_link_base?: string | null
+          cpf?: string | null
+          created_at?: string
+          email?: string | null
+          equipe_id?: string | null
+          id?: string
+          nome_completo?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduled_automations: {
+        Row: {
+          created_at: string
+          equipe_id: string
+          executed: boolean | null
+          executed_at: string | null
+          id: string
+          lead_id: string
+          payload: Json | null
+          scheduled_for: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          equipe_id: string
+          executed?: boolean | null
+          executed_at?: string | null
+          id?: string
+          lead_id: string
+          payload?: Json | null
+          scheduled_for: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          equipe_id?: string
+          executed?: boolean | null
+          executed_at?: string | null
+          id?: string
+          lead_id?: string
+          payload?: Json | null
+          scheduled_for?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_automations_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_automations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -30,13 +30,13 @@ export const useLeadActivities = (leadId?: string) => {
       if (!leadId) return [];
       
       const { data, error } = await supabase
-        .from("lead_activities" as any)
+        .from("lead_activities")
         .select("*")
         .eq("lead_id", leadId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return (data || []) as unknown as LeadActivity[];
+      return (data || []) as LeadActivity[];
     },
     enabled: !!leadId,
   });
@@ -44,12 +44,14 @@ export const useLeadActivities = (leadId?: string) => {
   const createActivity = useMutation({
     mutationFn: async (activityData: CreateActivityData) => {
       const { data, error } = await supabase
-        .from("lead_activities" as any)
+        .from("lead_activities")
         .insert({
-          ...activityData,
+          lead_id: activityData.lead_id,
+          tipo: activityData.tipo,
+          descricao: activityData.descricao || null,
           user_id: user?.id || null,
           metadata: activityData.metadata || {},
-        })
+        } as any)
         .select()
         .single();
 

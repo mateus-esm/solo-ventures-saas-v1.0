@@ -27,6 +27,14 @@ export interface UpdateStageData {
   is_default?: boolean;
 }
 
+const DEFAULT_STAGES = [
+  { name: "Novo Lead", color: "#6b7280", position: 1, is_default: true },
+  { name: "Qualificação", color: "#f59e0b", position: 2, is_default: false },
+  { name: "Reunião Agendada", color: "#3b82f6", position: 3, is_default: false },
+  { name: "Proposta Enviada", color: "#8b5cf6", position: 4, is_default: false },
+  { name: "Fechado", color: "#10b981", position: 5, is_default: false },
+];
+
 export const usePipelineStages = () => {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
@@ -38,13 +46,34 @@ export const usePipelineStages = () => {
       if (!equipeId) return [];
       
       const { data, error } = await supabase
-        .from("pipeline_stages" as any)
+        .from("pipeline_stages")
         .select("*")
         .eq("equipe_id", equipeId)
         .order("position", { ascending: true });
 
       if (error) throw error;
-      return (data || []) as unknown as PipelineStage[];
+      
+      // If no stages exist, create default ones
+      if (!data || data.length === 0) {
+        const stagesToCreate = DEFAULT_STAGES.map(stage => ({
+          ...stage,
+          equipe_id: equipeId,
+        }));
+
+        const { data: createdStages, error: createError } = await supabase
+          .from("pipeline_stages")
+          .insert(stagesToCreate)
+          .select();
+
+        if (createError) {
+          console.error("Error creating default stages:", createError);
+          return [];
+        }
+
+        return (createdStages || []) as PipelineStage[];
+      }
+
+      return (data || []) as PipelineStage[];
     },
     enabled: !!equipeId,
   });
@@ -60,7 +89,7 @@ export const usePipelineStages = () => {
       ) || 0;
 
       const { data, error } = await supabase
-        .from("pipeline_stages" as any)
+        .from("pipeline_stages")
         .insert({
           ...stageData,
           equipe_id: equipeId,
@@ -85,7 +114,7 @@ export const usePipelineStages = () => {
   const updateStage = useMutation({
     mutationFn: async ({ id, ...updateData }: UpdateStageData) => {
       const { data, error } = await supabase
-        .from("pipeline_stages" as any)
+        .from("pipeline_stages")
         .update(updateData)
         .eq("id", id)
         .select()
@@ -105,7 +134,7 @@ export const usePipelineStages = () => {
 
   const deleteStage = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("pipeline_stages" as any).delete().eq("id", id);
+      const { error } = await supabase.from("pipeline_stages").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -121,7 +150,7 @@ export const usePipelineStages = () => {
     mutationFn: async (orderedIds: string[]) => {
       const updates = orderedIds.map((id, index) => 
         supabase
-          .from("pipeline_stages" as any)
+          .from("pipeline_stages")
           .update({ position: index + 1 })
           .eq("id", id)
       );

@@ -54,18 +54,26 @@ const Billing = () => {
       const { data: profile } = await supabase
         .from('profiles')
         .select('equipe_id')
-        .eq('user_id', user.id)
-        .single();
+        .eq('id', user.id)
+        .maybeSingle();
 
       if (profile?.equipe_id) {
         const { data: equipe } = await supabase
           .from('equipes')
-          .select('plano_id, planos(*)')
+          .select('limite_creditos, creditos_avulsos')
           .eq('id', profile.equipe_id)
-          .single();
+          .maybeSingle();
 
-        if (equipe?.planos) {
-          setPlano(equipe.planos as unknown as Plano);
+        if (equipe) {
+          // Set a basic plan info from equipe data
+          setPlano({
+            id: 1,
+            nome: 'Plano Atual',
+            preco_mensal: 0,
+            limite_creditos: equipe.limite_creditos || 1000,
+            limite_usuarios: null,
+            funcionalidades: ['CRM Kanban', 'Webhook Integration', 'Automações'],
+          });
         }
       }
     } catch (error: any) {

@@ -9,13 +9,18 @@ const corsHeaders = {
 
 interface WebhookPayload {
   agent_id: string;
-  interaction_id: string;
+  interaction_id?: string;
   nome?: string;
+  name?: string;
   email?: string;
   telefone?: string;
+  phone?: string;
   mensagem?: string;
+  message?: string;
   tags?: string[];
   custom_fields?: Record<string, unknown>;
+  opportunity_value?: number;
+  source?: string;
 }
 
 serve(async (req) => {
@@ -44,7 +49,7 @@ serve(async (req) => {
     // Find equipe by gpt_maker_agent_id
     const { data: equipe, error: equipeError } = await supabase
       .from('equipes')
-      .select('id, nome_cliente')
+      .select('id, nome')
       .eq('gpt_maker_agent_id', payload.agent_id)
       .maybeSingle();
 
@@ -64,7 +69,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Found equipe:', equipe.nome_cliente);
+    console.log('Found equipe:', equipe.nome);
 
     // Get default stage for this equipe
     const { data: defaultStage, error: stageError } = await supabase
@@ -78,19 +83,34 @@ serve(async (req) => {
       console.error('Error finding default stage:', stageError);
     }
 
-    // Insert lead
+    // If no default stage, get first stage by position
+    let stageId = defaultStage?.id || null;
+    if (!stageId) {
+      const { data: firstStage } = await supabase
+        .from('pipeline_stages')
+        .select('id')
+        .eq('equipe_id', equipe.id)
+        .order('position', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      stageId = firstStage?.id || null;
+    }
+
+    // Insert lead - support both Portuguese and English field names
     const leadData = {
       equipe_id: equipe.id,
-      stage_id: defaultStage?.id || null,
-      nome: payload.nome || 'Lead via Agente',
+      stage_id: stageId,
+      name: payload.nome || payload.name || 'Lead via Agente',
       email: payload.email || null,
-      telefone: payload.telefone || null,
+      phone: payload.telefone || payload.phone || null,
+      source: payload.source || 'webhook',
       origem: 'agente_sdr',
       atendido_por_agente: true,
       interaction_id: payload.interaction_id || null,
       tags: payload.tags || [],
-      observacoes: payload.mensagem || null,
+      observations: payload.mensagem || payload.message || null,
       custom_fields: payload.custom_fields || {},
+      opportunity_value: payload.opportunity_value || 0,
     };
 
     console.log('Inserting lead:', JSON.stringify(leadData));
