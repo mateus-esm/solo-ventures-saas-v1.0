@@ -2,8 +2,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Lead } from "@/hooks/useLeads";
-import { Phone, Mail, Calendar, CheckCircle2, Clock } from "lucide-react";
+import { Phone, Mail, Calendar, DollarSign, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Lead } from "./KanbanBoard";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -27,6 +27,25 @@ export const LeadCard = ({ lead, onClick }: LeadCardProps) => {
     transition,
   };
 
+  const formatCurrency = (value: number | null) => {
+    if (!value) return null;
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+  };
+
+  const getOrigemBadge = (origem: string) => {
+    switch (origem) {
+      case "agente_sdr":
+        return <Badge variant="default" className="bg-primary/90 text-xs">SDR</Badge>;
+      case "indicacao":
+        return <Badge variant="secondary" className="text-xs">Indicação</Badge>;
+      default:
+        return <Badge variant="outline" className="text-xs">Manual</Badge>;
+    }
+  };
+
   return (
     <Card
       ref={setNodeRef}
@@ -34,86 +53,99 @@ export const LeadCard = ({ lead, onClick }: LeadCardProps) => {
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={`p-3 cursor-pointer hover:shadow-md transition-shadow bg-card border-border ${
-        isDragging ? "opacity-50 shadow-lg ring-2 ring-primary" : ""
-      }`}
+      className={`
+        p-3 cursor-pointer transition-all duration-200
+        hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5
+        bg-card border-border
+        ${isDragging ? "opacity-50 shadow-lg scale-105 z-50" : ""}
+      `}
     >
-      <div className="space-y-2">
-        {/* Nome */}
-        <div className="font-medium text-foreground truncate">{lead.nome}</div>
+      {/* Header */}
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <h4 className="font-medium text-sm text-foreground truncate flex-1">
+          {lead.nome}
+        </h4>
+        {getOrigemBadge(lead.origem)}
+      </div>
 
-        {/* Contact Info */}
-        <div className="space-y-1 text-sm text-muted-foreground">
-          {lead.telefone && (
-            <div className="flex items-center gap-1.5">
-              <Phone className="h-3 w-3" />
-              <span className="truncate">{lead.telefone}</span>
-            </div>
-          )}
-          {lead.email && (
-            <div className="flex items-center gap-1.5">
-              <Mail className="h-3 w-3" />
-              <span className="truncate">{lead.email}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Status Indicators */}
-        <div className="flex flex-wrap gap-1">
-          {lead.reuniao_agendada && (
-            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
-              <Calendar className="h-3 w-3 mr-1" />
-              Agendada
-            </Badge>
-          )}
-          {lead.reuniao_realizada && (
-            <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">
-              <CheckCircle2 className="h-3 w-3 mr-1" />
-              Realizada
-            </Badge>
-          )}
-          {lead.no_show && (
-            <Badge variant="outline" className="text-xs bg-destructive/10 text-destructive border-destructive/20">
-              No Show
-            </Badge>
-          )}
-        </div>
-
-        {/* Tags */}
-        {lead.tags && lead.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {lead.tags.slice(0, 3).map((tag, index) => (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-            {lead.tags.length > 3 && (
-              <Badge variant="secondary" className="text-xs">
-                +{lead.tags.length - 3}
-              </Badge>
-            )}
+      {/* Contact Info */}
+      <div className="space-y-1 mb-3">
+        {lead.telefone && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Phone className="h-3 w-3" />
+            <span className="truncate">{lead.telefone}</span>
           </div>
         )}
-
-        {/* Next Contact */}
-        {lead.proximo_contato && (
-          <div className="flex items-center gap-1 text-xs text-muted-foreground pt-1 border-t border-border">
-            <Clock className="h-3 w-3" />
-            <span>
-              Próximo: {format(new Date(lead.proximo_contato), "dd/MM", { locale: ptBR })}
-            </span>
-          </div>
-        )}
-
-        {/* Origin Badge */}
-        {lead.atendido_por_agente && (
-          <div className="pt-1">
-            <Badge variant="outline" className="text-xs bg-accent/10">
-              🤖 Via Agente
-            </Badge>
+        {lead.email && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Mail className="h-3 w-3" />
+            <span className="truncate">{lead.email}</span>
           </div>
         )}
       </div>
+
+      {/* Value */}
+      {lead.valor && (
+        <div className="flex items-center gap-1.5 mb-3">
+          <DollarSign className="h-3.5 w-3.5 text-green-500" />
+          <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+            {formatCurrency(lead.valor)}
+          </span>
+        </div>
+      )}
+
+      {/* Status Badges */}
+      <div className="flex flex-wrap gap-1.5 mb-2">
+        {lead.reuniao_agendada && (
+          <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30">
+            <Calendar className="h-3 w-3 mr-1" />
+            Agendada
+          </Badge>
+        )}
+        {lead.reuniao_realizada && (
+          <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Realizada
+          </Badge>
+        )}
+        {lead.no_show && (
+          <Badge variant="outline" className="text-xs bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30">
+            <XCircle className="h-3 w-3 mr-1" />
+            No Show
+          </Badge>
+        )}
+      </div>
+
+      {/* Tags */}
+      {lead.tags && lead.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-2">
+          {lead.tags.slice(0, 3).map((tag, index) => (
+            <Badge
+              key={index}
+              variant="secondary"
+              className="text-xs px-1.5 py-0"
+            >
+              {tag}
+            </Badge>
+          ))}
+          {lead.tags.length > 3 && (
+            <Badge variant="secondary" className="text-xs px-1.5 py-0">
+              +{lead.tags.length - 3}
+            </Badge>
+          )}
+        </div>
+      )}
+
+      {/* Next Contact */}
+      {lead.proximo_contato && (
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-2 border-t border-border">
+          <Clock className="h-3 w-3" />
+          <span>
+            Próximo:{" "}
+            {format(new Date(lead.proximo_contato), "dd/MM", { locale: ptBR })}
+          </span>
+        </div>
+      )}
     </Card>
   );
 };

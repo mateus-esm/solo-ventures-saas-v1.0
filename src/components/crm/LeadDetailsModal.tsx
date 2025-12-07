@@ -4,18 +4,15 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Lead, UpdateLeadData } from "@/hooks/useLeads";
-import { useLeadActivities, CreateActivityData } from "@/hooks/useLeadActivities";
-import { usePipelineStages } from "@/hooks/usePipelineStages";
 import {
   Select,
   SelectContent,
@@ -23,16 +20,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon, Trash2, X, Plus, Phone, Mail, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { X, Plus, Phone, Mail, Calendar, MessageSquare, Clock } from "lucide-react";
+import { Lead, PipelineStage } from "./KanbanBoard";
 
 interface LeadDetailsModalProps {
   lead: Lead | null;
   open: boolean;
   onClose: () => void;
-  onSave: (data: UpdateLeadData) => void;
-  onDelete?: (id: string) => void;
+  onSave: (data: { id: string } & Partial<Lead>) => void;
+  onDelete: (id: string) => void;
 }
 
 export const LeadDetailsModal = ({
@@ -42,64 +42,36 @@ export const LeadDetailsModal = ({
   onSave,
   onDelete,
 }: LeadDetailsModalProps) => {
-  const { stages } = usePipelineStages();
-  const { activities, createActivity } = useLeadActivities(lead?.id);
-  
-  const [formData, setFormData] = useState({
-    nome: "",
-    email: "",
-    telefone: "",
-    stage_id: "",
-    tags: [] as string[],
-    observacoes: "",
-    proximo_contato: "",
-    reuniao_agendada: false,
-    reuniao_realizada: false,
-    no_show: false,
-  });
+  const [formData, setFormData] = useState<Partial<Lead>>({});
   const [newTag, setNewTag] = useState("");
-  const [newNote, setNewNote] = useState("");
+
+  // Get stages from parent (we'll pass them through context or props in a real app)
+  const stages: PipelineStage[] = [
+    { id: "stage_1", equipe_id: "demo", name: "Novo Lead", position: 1, color: "#6366f1", is_default: true, created_at: "" },
+    { id: "stage_2", equipe_id: "demo", name: "Qualificação", position: 2, color: "#f59e0b", is_default: false, created_at: "" },
+    { id: "stage_3", equipe_id: "demo", name: "Proposta Enviada", position: 3, color: "#8b5cf6", is_default: false, created_at: "" },
+    { id: "stage_4", equipe_id: "demo", name: "Negociação", position: 4, color: "#06b6d4", is_default: false, created_at: "" },
+    { id: "stage_5", equipe_id: "demo", name: "Fechado Ganho", position: 5, color: "#22c55e", is_default: false, created_at: "" },
+    { id: "stage_6", equipe_id: "demo", name: "Fechado Perdido", position: 6, color: "#ef4444", is_default: false, created_at: "" },
+  ];
 
   useEffect(() => {
     if (lead) {
-      setFormData({
-        nome: lead.nome || "",
-        email: lead.email || "",
-        telefone: lead.telefone || "",
-        stage_id: lead.stage_id || "",
-        tags: lead.tags || [],
-        observacoes: lead.observacoes || "",
-        proximo_contato: lead.proximo_contato ? lead.proximo_contato.split("T")[0] : "",
-        reuniao_agendada: lead.reuniao_agendada || false,
-        reuniao_realizada: lead.reuniao_realizada || false,
-        no_show: lead.no_show || false,
-      });
+      setFormData({ ...lead });
     }
   }, [lead]);
 
+  if (!lead) return null;
+
   const handleSave = () => {
-    if (!lead) return;
-    onSave({
-      id: lead.id,
-      nome: formData.nome,
-      email: formData.email || null,
-      telefone: formData.telefone || null,
-      stage_id: formData.stage_id || null,
-      tags: formData.tags,
-      observacoes: formData.observacoes || null,
-      proximo_contato: formData.proximo_contato || null,
-      reuniao_agendada: formData.reuniao_agendada,
-      reuniao_realizada: formData.reuniao_realizada,
-      no_show: formData.no_show,
-    });
-    onClose();
+    onSave({ ...formData, id: lead.id } as { id: string } & Partial<Lead>);
   };
 
   const handleAddTag = () => {
-    if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
+    if (newTag.trim()) {
       setFormData((prev) => ({
         ...prev,
-        tags: [...prev.tags, newTag.trim()],
+        tags: [...(prev.tags || []), newTag.trim()],
       }));
       setNewTag("");
     }
@@ -108,162 +80,217 @@ export const LeadDetailsModal = ({
   const handleRemoveTag = (tagToRemove: string) => {
     setFormData((prev) => ({
       ...prev,
-      tags: prev.tags.filter((t) => t !== tagToRemove),
+      tags: (prev.tags || []).filter((tag) => tag !== tagToRemove),
     }));
   };
 
-  const handleAddNote = () => {
-    if (newNote.trim() && lead) {
-      createActivity.mutate({
-        lead_id: lead.id,
-        tipo: "nota",
-        descricao: newNote.trim(),
-      });
-      setNewNote("");
-    }
+  const formatCurrency = (value: string) => {
+    const numericValue = value.replace(/\D/g, "");
+    const number = parseInt(numericValue, 10) / 100;
+    return number.toLocaleString("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   };
 
-  const getActivityIcon = (tipo: string) => {
-    switch (tipo) {
-      case "ligacao": return <Phone className="h-4 w-4" />;
-      case "email": return <Mail className="h-4 w-4" />;
-      case "reuniao": return <Calendar className="h-4 w-4" />;
-      case "nota": return <MessageSquare className="h-4 w-4" />;
-      default: return <Clock className="h-4 w-4" />;
-    }
+  const parseCurrency = (value: string): number => {
+    const numericValue = value.replace(/\D/g, "");
+    return parseInt(numericValue, 10) / 100;
   };
-
-  if (!lead) return null;
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] p-0">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="text-xl">Detalhes do Lead</DialogTitle>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            Detalhes do Lead
+          </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="max-h-[calc(90vh-120px)]">
-          <div className="p-6 pt-4 space-y-6">
+        <ScrollArea className="max-h-[60vh] pr-4">
+          <div className="space-y-6">
             {/* Basic Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
                 <Label htmlFor="nome">Nome</Label>
                 <Input
                   id="nome"
-                  value={formData.nome}
-                  onChange={(e) => setFormData((p) => ({ ...p, nome: e.target.value }))}
+                  value={formData.nome || ""}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, nome: e.target.value }))
+                  }
+                  className="mt-1.5"
                 />
               </div>
-              <div className="space-y-2">
+
+              <div>
                 <Label htmlFor="stage">Etapa</Label>
                 <Select
-                  value={formData.stage_id}
-                  onValueChange={(v) => setFormData((p) => ({ ...p, stage_id: v }))}
+                  value={formData.stage_id || ""}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({ ...prev, stage_id: value }))
+                  }
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue placeholder="Selecione uma etapa" />
                   </SelectTrigger>
                   <SelectContent>
-                    {stages.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
+                    {stages.map((stage) => (
+                      <SelectItem key={stage.id} value={stage.id}>
                         <div className="flex items-center gap-2">
                           <div
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: s.color }}
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: stage.color }}
                           />
-                          {s.name}
+                          {stage.name}
                         </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="telefone">Telefone</Label>
-                <Input
-                  id="telefone"
-                  value={formData.telefone}
-                  onChange={(e) => setFormData((p) => ({ ...p, telefone: e.target.value }))}
-                />
+
+              <div>
+                <Label htmlFor="valor">Valor da Oportunidade</Label>
+                <div className="relative mt-1.5">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="valor"
+                    className="pl-9"
+                    value={
+                      formData.valor
+                        ? formatCurrency(String(formData.valor * 100))
+                        : ""
+                    }
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        valor: parseCurrency(e.target.value),
+                      }))
+                    }
+                    placeholder="0,00"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
+
+              <div>
+                <Label htmlFor="telefone">Telefone</Label>
+                <div className="relative mt-1.5">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="telefone"
+                    className="pl-9"
+                    value={formData.telefone || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, telefone: e.target.value }))
+                    }
+                  />
+                </div>
+              </div>
+
+              <div>
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
-                />
+                <div className="relative mt-1.5">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    className="pl-9"
+                    value={formData.email || ""}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, email: e.target.value }))
+                    }
+                  />
+                </div>
               </div>
             </div>
 
-            <Separator />
-
             {/* Tags */}
-            <div className="space-y-2">
+            <div>
               <Label>Tags</Label>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {formData.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="gap-1">
+              <div className="flex flex-wrap gap-2 mt-2">
+                {(formData.tags || []).map((tag, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="flex items-center gap-1 pr-1"
+                  >
                     {tag}
                     <button
+                      type="button"
                       onClick={() => handleRemoveTag(tag)}
-                      className="ml-1 hover:text-destructive"
+                      className="ml-1 hover:bg-muted rounded-full p-0.5"
                     >
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
                 ))}
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Nova tag..."
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddTag())}
-                />
-                <Button type="button" size="sm" variant="outline" onClick={handleAddTag}>
-                  <Plus className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-1">
+                  <Input
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
+                    placeholder="Nova tag..."
+                    className="h-7 w-24 text-xs"
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAddTag}
+                    className="h-7 px-2"
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
               </div>
             </div>
 
-            <Separator />
-
             {/* Status Checkboxes */}
-            <div className="space-y-3">
+            <div>
               <Label>Status</Label>
-              <div className="flex flex-wrap gap-4">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-wrap gap-6 mt-3">
+                <div className="flex items-center space-x-2">
                   <Checkbox
                     id="reuniao_agendada"
-                    checked={formData.reuniao_agendada}
-                    onCheckedChange={(c) =>
-                      setFormData((p) => ({ ...p, reuniao_agendada: !!c }))
+                    checked={formData.reuniao_agendada || false}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        reuniao_agendada: checked as boolean,
+                      }))
                     }
                   />
                   <Label htmlFor="reuniao_agendada" className="font-normal cursor-pointer">
                     Reunião Agendada
                   </Label>
                 </div>
-                <div className="flex items-center gap-2">
+
+                <div className="flex items-center space-x-2">
                   <Checkbox
                     id="reuniao_realizada"
-                    checked={formData.reuniao_realizada}
-                    onCheckedChange={(c) =>
-                      setFormData((p) => ({ ...p, reuniao_realizada: !!c }))
+                    checked={formData.reuniao_realizada || false}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        reuniao_realizada: checked as boolean,
+                      }))
                     }
                   />
                   <Label htmlFor="reuniao_realizada" className="font-normal cursor-pointer">
                     Reunião Realizada
                   </Label>
                 </div>
-                <div className="flex items-center gap-2">
+
+                <div className="flex items-center space-x-2">
                   <Checkbox
                     id="no_show"
-                    checked={formData.no_show}
-                    onCheckedChange={(c) =>
-                      setFormData((p) => ({ ...p, no_show: !!c }))
+                    checked={formData.no_show || false}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        no_show: checked as boolean,
+                      }))
                     }
                   />
                   <Label htmlFor="no_show" className="font-normal cursor-pointer">
@@ -274,106 +301,96 @@ export const LeadDetailsModal = ({
             </div>
 
             {/* Next Contact */}
-            <div className="space-y-2">
-              <Label htmlFor="proximo_contato">Próximo Contato</Label>
-              <Input
-                id="proximo_contato"
-                type="date"
-                value={formData.proximo_contato}
-                onChange={(e) =>
-                  setFormData((p) => ({ ...p, proximo_contato: e.target.value }))
-                }
-              />
+            <div>
+              <Label>Próximo Contato</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full mt-1.5 justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.proximo_contato
+                      ? format(new Date(formData.proximo_contato), "PPP", {
+                          locale: ptBR,
+                        })
+                      : "Selecionar data"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={
+                      formData.proximo_contato
+                        ? new Date(formData.proximo_contato)
+                        : undefined
+                    }
+                    onSelect={(date) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        proximo_contato: date?.toISOString() || null,
+                      }))
+                    }
+                    locale={ptBR}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Observations */}
-            <div className="space-y-2">
+            <div>
               <Label htmlFor="observacoes">Observações</Label>
               <Textarea
                 id="observacoes"
-                value={formData.observacoes}
+                value={formData.observacoes || ""}
                 onChange={(e) =>
-                  setFormData((p) => ({ ...p, observacoes: e.target.value }))
+                  setFormData((prev) => ({ ...prev, observacoes: e.target.value }))
                 }
-                rows={3}
+                rows={4}
+                className="mt-1.5 resize-none"
+                placeholder="Adicione anotações sobre este lead..."
               />
             </div>
 
-            <Separator />
-
-            {/* Activity Timeline */}
-            <div className="space-y-3">
-              <Label>Histórico de Atividades</Label>
-              
-              {/* Add Note */}
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Adicionar nota..."
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddNote())}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleAddNote}
-                  disabled={createActivity.isPending}
-                >
-                  Adicionar
-                </Button>
-              </div>
-
-              {/* Activities List */}
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {activities.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-start gap-3 p-2 bg-muted/50 rounded-lg text-sm"
-                  >
-                    <div className="text-muted-foreground mt-0.5">
-                      {getActivityIcon(activity.tipo)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-foreground">{activity.descricao}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {format(new Date(activity.created_at), "dd/MM/yyyy HH:mm", {
-                          locale: ptBR,
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                {activities.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Nenhuma atividade registrada
-                  </p>
-                )}
-              </div>
+            {/* Meta Info */}
+            <div className="text-xs text-muted-foreground pt-4 border-t border-border">
+              <p>
+                Criado em:{" "}
+                {format(new Date(lead.created_at), "dd/MM/yyyy 'às' HH:mm", {
+                  locale: ptBR,
+                })}
+              </p>
+              <p>
+                Última atualização:{" "}
+                {format(new Date(lead.updated_at), "dd/MM/yyyy 'às' HH:mm", {
+                  locale: ptBR,
+                })}
+              </p>
+              <p>Origem: {lead.origem}</p>
             </div>
           </div>
         </ScrollArea>
 
-        {/* Footer Actions */}
-        <div className="p-4 border-t border-border flex justify-between">
-          {onDelete && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => {
-                onDelete(lead.id);
-                onClose();
-              }}
-            >
-              Excluir Lead
-            </Button>
-          )}
-          <div className="flex gap-2 ml-auto">
-            <Button variant="outline" onClick={onClose}>
+        <DialogFooter className="flex items-center justify-between border-t border-border pt-4">
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={() => onDelete(lead.id)}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Excluir
+          </Button>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>Salvar</Button>
+            <Button type="button" onClick={handleSave}>
+              Salvar
+            </Button>
           </div>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
