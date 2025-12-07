@@ -17,7 +17,7 @@ const Home = () => {
       <div className="border-b border-border bg-header-bg">
         <div className="container mx-auto px-4 py-6">
           <h1 className="text-3xl font-bold text-foreground text-center">
-            {tenant.name} <span className="text-primary">— {equipe?.nome_cliente || 'Assistente'}</span>
+            {tenant.name} <span className="text-primary">— {equipe?.nome || 'Assistente'}</span>
           </h1>
           <p className="text-sm text-foreground/70 mt-2 text-center font-medium">
             {profile?.nome_completo} • Powered by Solo Ventures ⚡
@@ -31,7 +31,7 @@ const Home = () => {
             <Card className="border-primary/20 bg-card">
               <CardContent className="p-6">
                 <p className="text-center text-foreground/80 leading-relaxed font-medium">
-                  {equipe?.home_explanation || defaultExplanation}
+                  {defaultExplanation}
                 </p>
               </CardContent>
             </Card>

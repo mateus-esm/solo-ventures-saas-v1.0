@@ -4,19 +4,23 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface Profile {
   id: string;
-  user_id: string;
-  email: string;
-  nome_completo: string;
-  equipe_id: string;
-  chat_link_base: string;
+  email: string | null;
+  nome_completo: string | null;
+  equipe_id: string | null;
+  chat_link_base: string | null;
+  telefone: string | null;
+  cpf: string | null;
+  cargo: string | null;
 }
 
 interface Equipe {
   id: string;
-  nome_cliente: string;
-  crm_link: string;
-  suporte_link: string;
-  home_explanation?: string;
+  nome: string;
+  niche: string | null;
+  gpt_maker_agent_id: string | null;
+  limite_creditos: number;
+  creditos_avulsos: number;
+  webhook_secret: string | null;
 }
 
 interface AuthContextType {
@@ -42,27 +46,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: profileData, error: profileError } = await supabase
       .from("profiles")
       .select("*")
-      .eq("user_id", userId)
-      .single();
+      .eq("id", userId)
+      .maybeSingle();
 
     if (profileError) {
       console.error("Erro ao buscar perfil:", profileError);
       return;
     }
 
-    setProfile(profileData);
+    if (profileData) {
+      setProfile(profileData as Profile);
 
-    if (profileData?.equipe_id) {
-      const { data: equipeData, error: equipeError } = await supabase
-        .from("equipes")
-        .select("*")
-        .eq("id", profileData.equipe_id)
-        .single();
+      if (profileData?.equipe_id) {
+        const { data: equipeData, error: equipeError } = await supabase
+          .from("equipes")
+          .select("*")
+          .eq("id", profileData.equipe_id)
+          .maybeSingle();
 
-      if (equipeError) {
-        console.error("Erro ao buscar equipe:", equipeError);
-      } else {
-        setEquipe(equipeData);
+        if (equipeError) {
+          console.error("Erro ao buscar equipe:", equipeError);
+        } else if (equipeData) {
+          setEquipe(equipeData as Equipe);
+        }
       }
     }
   };
