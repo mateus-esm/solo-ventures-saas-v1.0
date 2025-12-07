@@ -1,16 +1,1 @@
-project_id = "vnyxjnvbdpawsrdwmsqc"
-
-[functions.fetch-gpt-credits]
-verify_jwt = true
-
-[functions.fetch-jestor-kpis]
-verify_jwt = true
-
-[functions.asaas-subscribe]
-verify_jwt = true
-
-[functions.asaas-buy-credits]
-verify_jwt = true
-
-[functions.gpt-maker-webhook]
-verify_jwt = false
+project_id = "padduteanashekmereof"
