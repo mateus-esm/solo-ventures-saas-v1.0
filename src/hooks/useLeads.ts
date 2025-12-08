@@ -2,54 +2,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Lead, CreateLeadData, UpdateLeadData } from "@/types/crm";
 
-export interface Lead {
-  id: string;
-  equipe_id: string;
-  stage_id: string | null;
-  nome: string;
-  email: string | null;
-  telefone: string | null;
-  origem: string;
-  atendido_por_agente: boolean;
-  interaction_id: string | null;
-  tags: string[];
-  observacoes: string | null;
-  proximo_contato: string | null;
-  reuniao_agendada: boolean;
-  reuniao_realizada: boolean;
-  no_show: boolean;
-  valor: number | null;
-  custom_fields: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CreateLeadData {
-  nome: string;
-  email?: string;
-  telefone?: string;
-  stage_id?: string;
-  tags?: string[];
-  observacoes?: string;
-  origem?: string;
-}
-
-export interface UpdateLeadData {
-  id: string;
-  nome?: string;
-  email?: string | null;
-  telefone?: string | null;
-  stage_id?: string | null;
-  tags?: string[];
-  observacoes?: string | null;
-  proximo_contato?: string | null;
-  reuniao_agendada?: boolean;
-  reuniao_realizada?: boolean;
-  no_show?: boolean;
-  valor?: number | null;
-  custom_fields?: Record<string, unknown>;
-}
+export type { Lead, CreateLeadData, UpdateLeadData } from "@/types/crm";
 
 export const useLeads = () => {
   const { profile } = useAuth();
@@ -62,13 +17,13 @@ export const useLeads = () => {
       if (!equipeId) return [];
       
       const { data, error } = await supabase
-        .from("leads" as any)
+        .from("leads")
         .select("*")
         .eq("equipe_id", equipeId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return (data || []) as unknown as Lead[];
+      return (data || []) as Lead[];
     },
     enabled: !!equipeId,
   });
@@ -78,11 +33,17 @@ export const useLeads = () => {
       if (!equipeId) throw new Error("No equipe_id");
       
       const { data, error } = await supabase
-        .from("leads" as any)
+        .from("leads")
         .insert({
-          ...leadData,
+          name: leadData.name,
+          email: leadData.email,
+          phone: leadData.phone,
+          stage_id: leadData.stage_id,
+          observations: leadData.observations,
+          source: leadData.source || "manual",
+          origem: leadData.source || "manual",
+          opportunity_value: leadData.opportunity_value || 0,
           equipe_id: equipeId,
-          origem: leadData.origem || "manual",
           atendido_por_agente: false,
           tags: leadData.tags || [],
           custom_fields: {},
@@ -105,8 +66,11 @@ export const useLeads = () => {
   const updateLead = useMutation({
     mutationFn: async ({ id, ...updateData }: UpdateLeadData) => {
       const { data, error } = await supabase
-        .from("leads" as any)
-        .update({ ...updateData, updated_at: new Date().toISOString() })
+        .from("leads")
+        .update({
+          ...updateData,
+          updated_at: new Date().toISOString(),
+        } as any)
         .eq("id", id)
         .select()
         .single();
@@ -125,7 +89,7 @@ export const useLeads = () => {
 
   const deleteLead = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("leads" as any).delete().eq("id", id);
+      const { error } = await supabase.from("leads").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -140,7 +104,7 @@ export const useLeads = () => {
   const moveLeadToStage = useMutation({
     mutationFn: async ({ leadId, stageId }: { leadId: string; stageId: string }) => {
       const { data, error } = await supabase
-        .from("leads" as any)
+        .from("leads")
         .update({ stage_id: stageId, updated_at: new Date().toISOString() })
         .eq("id", leadId)
         .select()

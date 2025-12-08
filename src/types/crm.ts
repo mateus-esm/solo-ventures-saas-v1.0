@@ -8,27 +8,19 @@ export interface Lead {
   email: string | null;
   phone: string | null;
   source: string | null;
-  opportunity_value: number;
-  meeting_scheduled: boolean;
-  meeting_done: boolean;
-  no_show: boolean;
+  opportunity_value: number | null;
+  meeting_scheduled: boolean | null;
+  meeting_done: boolean | null;
+  no_show: boolean | null;
   next_contact: string | null;
   observations: string | null;
-  tags: string[];
-  custom_fields: Record<string, unknown>;
+  tags: string[] | null;
+  custom_fields: Record<string, unknown> | null;
   origem: string | null;
-  atendido_por_agente: boolean;
+  atendido_por_agente: boolean | null;
   interaction_id: string | null;
   created_at: string;
   updated_at: string;
-  // Alias fields for backward compatibility
-  nome?: string;
-  telefone?: string;
-  observacoes?: string;
-  proximo_contato?: string;
-  reuniao_agendada?: boolean;
-  reuniao_realizada?: boolean;
-  valor?: number;
 }
 
 export interface PipelineStage {
@@ -47,6 +39,33 @@ export interface LeadActivity {
   user_id: string | null;
   tipo: string;
   descricao: string | null;
-  metadata: Record<string, unknown>;
+  metadata: Record<string, unknown> | null;
   created_at: string;
+}
+
+export interface CreateLeadData {
+  name: string;
+  email?: string;
+  phone?: string;
+  stage_id?: string;
+  tags?: string[];
+  observations?: string;
+  source?: string;
+  opportunity_value?: number;
+}
+
+export interface UpdateLeadData {
+  id: string;
+  name?: string;
+  email?: string | null;
+  phone?: string | null;
+  stage_id?: string | null;
+  tags?: string[];
+  observations?: string | null;
+  next_contact?: string | null;
+  meeting_scheduled?: boolean;
+  meeting_done?: boolean;
+  no_show?: boolean;
+  opportunity_value?: number | null;
+  custom_fields?: Record<string, unknown>;
 }

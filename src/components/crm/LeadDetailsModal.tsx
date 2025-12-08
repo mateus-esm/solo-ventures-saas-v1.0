@@ -25,10 +25,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Trash2, X, Plus, Phone, Mail, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Lead, PipelineStage } from "./KanbanBoard";
+import { Lead, PipelineStage } from "@/types/crm";
 
 interface LeadDetailsModalProps {
   lead: Lead | null;
+  stages: PipelineStage[];
   open: boolean;
   onClose: () => void;
   onSave: (data: { id: string } & Partial<Lead>) => void;
@@ -37,6 +38,7 @@ interface LeadDetailsModalProps {
 
 export const LeadDetailsModal = ({
   lead,
+  stages,
   open,
   onClose,
   onSave,
@@ -44,16 +46,6 @@ export const LeadDetailsModal = ({
 }: LeadDetailsModalProps) => {
   const [formData, setFormData] = useState<Partial<Lead>>({});
   const [newTag, setNewTag] = useState("");
-
-  // Get stages from parent (we'll pass them through context or props in a real app)
-  const stages: PipelineStage[] = [
-    { id: "stage_1", equipe_id: "demo", name: "Novo Lead", position: 1, color: "#6366f1", is_default: true, created_at: "" },
-    { id: "stage_2", equipe_id: "demo", name: "Qualificação", position: 2, color: "#f59e0b", is_default: false, created_at: "" },
-    { id: "stage_3", equipe_id: "demo", name: "Proposta Enviada", position: 3, color: "#8b5cf6", is_default: false, created_at: "" },
-    { id: "stage_4", equipe_id: "demo", name: "Negociação", position: 4, color: "#06b6d4", is_default: false, created_at: "" },
-    { id: "stage_5", equipe_id: "demo", name: "Fechado Ganho", position: 5, color: "#22c55e", is_default: false, created_at: "" },
-    { id: "stage_6", equipe_id: "demo", name: "Fechado Perdido", position: 6, color: "#ef4444", is_default: false, created_at: "" },
-  ];
 
   useEffect(() => {
     if (lead) {
@@ -112,12 +104,12 @@ export const LeadDetailsModal = ({
             {/* Basic Info */}
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <Label htmlFor="nome">Nome</Label>
+                <Label htmlFor="name">Nome</Label>
                 <Input
-                  id="nome"
-                  value={formData.nome || ""}
+                  id="name"
+                  value={formData.name || ""}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, nome: e.target.value }))
+                    setFormData((prev) => ({ ...prev, name: e.target.value }))
                   }
                   className="mt-1.5"
                 />
@@ -151,21 +143,21 @@ export const LeadDetailsModal = ({
               </div>
 
               <div>
-                <Label htmlFor="valor">Valor da Oportunidade</Label>
+                <Label htmlFor="opportunity_value">Valor da Oportunidade</Label>
                 <div className="relative mt-1.5">
                   <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="valor"
+                    id="opportunity_value"
                     className="pl-9"
                     value={
-                      formData.valor
-                        ? formatCurrency(String(formData.valor * 100))
+                      formData.opportunity_value
+                        ? formatCurrency(String(formData.opportunity_value * 100))
                         : ""
                     }
                     onChange={(e) =>
                       setFormData((prev) => ({
                         ...prev,
-                        valor: parseCurrency(e.target.value),
+                        opportunity_value: parseCurrency(e.target.value),
                       }))
                     }
                     placeholder="0,00"
@@ -174,15 +166,15 @@ export const LeadDetailsModal = ({
               </div>
 
               <div>
-                <Label htmlFor="telefone">Telefone</Label>
+                <Label htmlFor="phone">Telefone</Label>
                 <div className="relative mt-1.5">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="telefone"
+                    id="phone"
                     className="pl-9"
-                    value={formData.telefone || ""}
+                    value={formData.phone || ""}
                     onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, telefone: e.target.value }))
+                      setFormData((prev) => ({ ...prev, phone: e.target.value }))
                     }
                   />
                 </div>
@@ -252,32 +244,32 @@ export const LeadDetailsModal = ({
               <div className="flex flex-wrap gap-6 mt-3">
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    id="reuniao_agendada"
-                    checked={formData.reuniao_agendada || false}
+                    id="meeting_scheduled"
+                    checked={formData.meeting_scheduled || false}
                     onCheckedChange={(checked) =>
                       setFormData((prev) => ({
                         ...prev,
-                        reuniao_agendada: checked as boolean,
+                        meeting_scheduled: checked as boolean,
                       }))
                     }
                   />
-                  <Label htmlFor="reuniao_agendada" className="font-normal cursor-pointer">
+                  <Label htmlFor="meeting_scheduled" className="font-normal cursor-pointer">
                     Reunião Agendada
                   </Label>
                 </div>
 
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    id="reuniao_realizada"
-                    checked={formData.reuniao_realizada || false}
+                    id="meeting_done"
+                    checked={formData.meeting_done || false}
                     onCheckedChange={(checked) =>
                       setFormData((prev) => ({
                         ...prev,
-                        reuniao_realizada: checked as boolean,
+                        meeting_done: checked as boolean,
                       }))
                     }
                   />
-                  <Label htmlFor="reuniao_realizada" className="font-normal cursor-pointer">
+                  <Label htmlFor="meeting_done" className="font-normal cursor-pointer">
                     Reunião Realizada
                   </Label>
                 </div>
@@ -310,8 +302,8 @@ export const LeadDetailsModal = ({
                     className="w-full mt-1.5 justify-start text-left font-normal"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.proximo_contato
-                      ? format(new Date(formData.proximo_contato), "PPP", {
+                    {formData.next_contact
+                      ? format(new Date(formData.next_contact), "PPP", {
                           locale: ptBR,
                         })
                       : "Selecionar data"}
@@ -321,14 +313,14 @@ export const LeadDetailsModal = ({
                   <Calendar
                     mode="single"
                     selected={
-                      formData.proximo_contato
-                        ? new Date(formData.proximo_contato)
+                      formData.next_contact
+                        ? new Date(formData.next_contact)
                         : undefined
                     }
                     onSelect={(date) =>
                       setFormData((prev) => ({
                         ...prev,
-                        proximo_contato: date?.toISOString() || null,
+                        next_contact: date?.toISOString() || null,
                       }))
                     }
                     locale={ptBR}
@@ -340,12 +332,12 @@ export const LeadDetailsModal = ({
 
             {/* Observations */}
             <div>
-              <Label htmlFor="observacoes">Observações</Label>
+              <Label htmlFor="observations">Observações</Label>
               <Textarea
-                id="observacoes"
-                value={formData.observacoes || ""}
+                id="observations"
+                value={formData.observations || ""}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, observacoes: e.target.value }))
+                  setFormData((prev) => ({ ...prev, observations: e.target.value }))
                 }
                 rows={4}
                 className="mt-1.5 resize-none"
@@ -367,7 +359,7 @@ export const LeadDetailsModal = ({
                   locale: ptBR,
                 })}
               </p>
-              <p>Origem: {lead.origem}</p>
+              <p>Origem: {lead.origem || "manual"}</p>
             </div>
           </div>
         </ScrollArea>

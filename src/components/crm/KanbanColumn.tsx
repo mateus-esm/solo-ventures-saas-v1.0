@@ -1,7 +1,7 @@
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { LeadCard } from "./LeadCard";
-import { Lead, PipelineStage } from "./KanbanBoard";
+import { Lead, PipelineStage } from "@/types/crm";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,7 @@ export const KanbanColumn = ({ stage, leads, onLeadClick }: KanbanColumnProps) =
     id: stage.id,
   });
 
-  const totalValue = leads.reduce((sum, lead) => sum + (lead.valor || 0), 0);
+  const totalValue = leads.reduce((sum, lead) => sum + (lead.opportunity_value || 0), 0);
 
   const formatCurrency = (value: number) => {
     if (value === 0) return null;

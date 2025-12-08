@@ -3,7 +3,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Phone, Mail, Calendar, DollarSign, CheckCircle, Clock, XCircle } from "lucide-react";
-import { Lead } from "./KanbanBoard";
+import { Lead } from "@/types/crm";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -35,7 +35,7 @@ export const LeadCard = ({ lead, onClick }: LeadCardProps) => {
     }).format(value);
   };
 
-  const getOrigemBadge = (origem: string) => {
+  const getOrigemBadge = (origem: string | null) => {
     switch (origem) {
       case "agente_sdr":
         return <Badge variant="default" className="bg-primary/90 text-xs">SDR</Badge>;
@@ -63,17 +63,17 @@ export const LeadCard = ({ lead, onClick }: LeadCardProps) => {
       {/* Header */}
       <div className="flex items-start justify-between gap-2 mb-2">
         <h4 className="font-medium text-sm text-foreground truncate flex-1">
-          {lead.nome}
+          {lead.name}
         </h4>
         {getOrigemBadge(lead.origem)}
       </div>
 
       {/* Contact Info */}
       <div className="space-y-1 mb-3">
-        {lead.telefone && (
+        {lead.phone && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Phone className="h-3 w-3" />
-            <span className="truncate">{lead.telefone}</span>
+            <span className="truncate">{lead.phone}</span>
           </div>
         )}
         {lead.email && (
@@ -85,24 +85,24 @@ export const LeadCard = ({ lead, onClick }: LeadCardProps) => {
       </div>
 
       {/* Value */}
-      {lead.valor && (
+      {lead.opportunity_value && lead.opportunity_value > 0 && (
         <div className="flex items-center gap-1.5 mb-3">
           <DollarSign className="h-3.5 w-3.5 text-green-500" />
           <span className="text-sm font-semibold text-green-600 dark:text-green-400">
-            {formatCurrency(lead.valor)}
+            {formatCurrency(lead.opportunity_value)}
           </span>
         </div>
       )}
 
       {/* Status Badges */}
       <div className="flex flex-wrap gap-1.5 mb-2">
-        {lead.reuniao_agendada && (
+        {lead.meeting_scheduled && (
           <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30">
             <Calendar className="h-3 w-3 mr-1" />
             Agendada
           </Badge>
         )}
-        {lead.reuniao_realizada && (
+        {lead.meeting_done && (
           <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30">
             <CheckCircle className="h-3 w-3 mr-1" />
             Realizada
@@ -137,12 +137,12 @@ export const LeadCard = ({ lead, onClick }: LeadCardProps) => {
       )}
 
       {/* Next Contact */}
-      {lead.proximo_contato && (
+      {lead.next_contact && (
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground pt-2 border-t border-border">
           <Clock className="h-3 w-3" />
           <span>
             Próximo:{" "}
-            {format(new Date(lead.proximo_contato), "dd/MM", { locale: ptBR })}
+            {format(new Date(lead.next_contact), "dd/MM", { locale: ptBR })}
           </span>
         </div>
       )}

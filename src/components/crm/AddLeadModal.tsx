@@ -18,63 +18,58 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Phone, Mail, DollarSign, User } from "lucide-react";
-import { PipelineStage } from "./KanbanBoard";
+import { PipelineStage } from "@/types/crm";
 
 interface AddLeadModalProps {
   open: boolean;
+  stages: PipelineStage[];
   onClose: () => void;
   onAdd: (data: {
-    nome: string;
+    name: string;
     email?: string;
-    telefone?: string;
+    phone?: string;
     stage_id?: string;
-    observacoes?: string;
-    origem?: string;
+    observations?: string;
+    source?: string;
+    opportunity_value?: number;
   }) => void;
 }
 
-// Default stages for the demo
-const defaultStages: PipelineStage[] = [
-  { id: "stage_1", equipe_id: "demo", name: "Novo Lead", position: 1, color: "#6366f1", is_default: true, created_at: "" },
-  { id: "stage_2", equipe_id: "demo", name: "Qualificação", position: 2, color: "#f59e0b", is_default: false, created_at: "" },
-  { id: "stage_3", equipe_id: "demo", name: "Proposta Enviada", position: 3, color: "#8b5cf6", is_default: false, created_at: "" },
-  { id: "stage_4", equipe_id: "demo", name: "Negociação", position: 4, color: "#06b6d4", is_default: false, created_at: "" },
-  { id: "stage_5", equipe_id: "demo", name: "Fechado Ganho", position: 5, color: "#22c55e", is_default: false, created_at: "" },
-  { id: "stage_6", equipe_id: "demo", name: "Fechado Perdido", position: 6, color: "#ef4444", is_default: false, created_at: "" },
-];
-
-export const AddLeadModal = ({ open, onClose, onAdd }: AddLeadModalProps) => {
+export const AddLeadModal = ({ open, stages, onClose, onAdd }: AddLeadModalProps) => {
   const [formData, setFormData] = useState({
-    nome: "",
+    name: "",
     email: "",
-    telefone: "",
-    stage_id: defaultStages[0]?.id || "",
+    phone: "",
+    stage_id: "",
     valor: "",
-    observacoes: "",
-    origem: "manual",
+    observations: "",
+    source: "manual",
   });
 
   const handleSubmit = () => {
-    if (!formData.nome.trim()) return;
+    if (!formData.name.trim()) return;
+
+    const valorNumerico = formData.valor ? parseCurrency(formData.valor) : undefined;
 
     onAdd({
-      nome: formData.nome,
+      name: formData.name,
       email: formData.email || undefined,
-      telefone: formData.telefone || undefined,
+      phone: formData.phone || undefined,
       stage_id: formData.stage_id || undefined,
-      observacoes: formData.observacoes || undefined,
-      origem: formData.origem,
+      observations: formData.observations || undefined,
+      source: formData.source,
+      opportunity_value: valorNumerico,
     });
 
     // Reset form
     setFormData({
-      nome: "",
+      name: "",
       email: "",
-      telefone: "",
-      stage_id: defaultStages[0]?.id || "",
+      phone: "",
+      stage_id: stages[0]?.id || "",
       valor: "",
-      observacoes: "",
-      origem: "manual",
+      observations: "",
+      source: "manual",
     });
   };
 
@@ -88,6 +83,11 @@ export const AddLeadModal = ({ open, onClose, onAdd }: AddLeadModalProps) => {
     });
   };
 
+  const parseCurrency = (value: string): number => {
+    const numericValue = value.replace(/\D/g, "");
+    return parseInt(numericValue, 10) / 100;
+  };
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="max-w-md">
@@ -97,15 +97,15 @@ export const AddLeadModal = ({ open, onClose, onAdd }: AddLeadModalProps) => {
 
         <div className="space-y-4">
           <div>
-            <Label htmlFor="add-nome">Nome *</Label>
+            <Label htmlFor="add-name">Nome *</Label>
             <div className="relative mt-1.5">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                id="add-nome"
+                id="add-name"
                 className="pl-9"
-                value={formData.nome}
+                value={formData.name}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, nome: e.target.value }))
+                  setFormData((prev) => ({ ...prev, name: e.target.value }))
                 }
                 placeholder="Nome do lead"
               />
@@ -114,15 +114,15 @@ export const AddLeadModal = ({ open, onClose, onAdd }: AddLeadModalProps) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="add-telefone">Telefone</Label>
+              <Label htmlFor="add-phone">Telefone</Label>
               <div className="relative mt-1.5">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="add-telefone"
+                  id="add-phone"
                   className="pl-9"
-                  value={formData.telefone}
+                  value={formData.phone}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, telefone: e.target.value }))
+                    setFormData((prev) => ({ ...prev, phone: e.target.value }))
                   }
                   placeholder="(00) 00000-0000"
                 />
@@ -160,7 +160,7 @@ export const AddLeadModal = ({ open, onClose, onAdd }: AddLeadModalProps) => {
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {defaultStages.map((stage) => (
+                  {stages.map((stage) => (
                     <SelectItem key={stage.id} value={stage.id}>
                       <div className="flex items-center gap-2">
                         <div
@@ -196,11 +196,11 @@ export const AddLeadModal = ({ open, onClose, onAdd }: AddLeadModalProps) => {
           </div>
 
           <div>
-            <Label htmlFor="add-origem">Fonte</Label>
+            <Label htmlFor="add-source">Fonte</Label>
             <Select
-              value={formData.origem}
+              value={formData.source}
               onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, origem: value }))
+                setFormData((prev) => ({ ...prev, source: value }))
               }
             >
               <SelectTrigger className="mt-1.5">
@@ -217,12 +217,12 @@ export const AddLeadModal = ({ open, onClose, onAdd }: AddLeadModalProps) => {
           </div>
 
           <div>
-            <Label htmlFor="add-observacoes">Observações</Label>
+            <Label htmlFor="add-observations">Observações</Label>
             <Textarea
-              id="add-observacoes"
-              value={formData.observacoes}
+              id="add-observations"
+              value={formData.observations}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, observacoes: e.target.value }))
+                setFormData((prev) => ({ ...prev, observations: e.target.value }))
               }
               rows={3}
               className="mt-1.5 resize-none"
@@ -238,7 +238,7 @@ export const AddLeadModal = ({ open, onClose, onAdd }: AddLeadModalProps) => {
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={!formData.nome.trim()}
+            disabled={!formData.name.trim()}
           >
             Adicionar Lead
           </Button>

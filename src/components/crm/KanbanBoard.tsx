@@ -18,27 +18,16 @@ import { StageManagerModal } from "./StageManagerModal";
 import { Button } from "@/components/ui/button";
 import { Plus, RefreshCw, Settings, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useLeads, Lead } from "@/hooks/useLeads";
-import { usePipelineStages, PipelineStage } from "@/hooks/usePipelineStages";
+import { useLeads } from "@/hooks/useLeads";
+import { usePipelineStages } from "@/hooks/usePipelineStages";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-
-// Extend Lead type for local state
-interface LocalLead extends Lead {
-  // Alias fields for UI compatibility
-  nome?: string;
-  telefone?: string;
-  observacoes?: string;
-  proximo_contato?: string;
-  reuniao_agendada?: boolean;
-  reuniao_realizada?: boolean;
-  valor?: number;
-}
+import { Lead, PipelineStage } from "@/types/crm";
 
 export const KanbanBoard = () => {
   const { profile, equipe } = useAuth();
   const { 
-    leads: dbLeads, 
+    leads, 
     isLoading: leadsLoading, 
     createLead, 
     updateLead, 
@@ -48,7 +37,7 @@ export const KanbanBoard = () => {
   } = useLeads();
   
   const { 
-    stages: dbStages, 
+    stages, 
     isLoading: stagesLoading,
     createStage,
     updateStage,
@@ -57,7 +46,7 @@ export const KanbanBoard = () => {
     refetch: refetchStages 
   } = usePipelineStages();
 
-  const [selectedLead, setSelectedLead] = useState<LocalLead | null>(null);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showStageManager, setShowStageManager] = useState(false);
@@ -70,22 +59,6 @@ export const KanbanBoard = () => {
       },
     })
   );
-
-  // Map leads with alias fields for UI components
-  const leads: LocalLead[] = useMemo(() => {
-    return dbLeads.map(lead => ({
-      ...lead,
-      nome: lead.name,
-      telefone: lead.phone,
-      observacoes: lead.observations,
-      proximo_contato: lead.next_contact,
-      reuniao_agendada: lead.meeting_scheduled,
-      reuniao_realizada: lead.meeting_done,
-      valor: lead.opportunity_value,
-    }));
-  }, [dbLeads]);
-
-  const stages = dbStages;
 
   // Subscribe to realtime updates
   useEffect(() => {
@@ -114,7 +87,7 @@ export const KanbanBoard = () => {
 
   // Group leads by stage
   const leadsByStage = useMemo(() => {
-    const grouped: Record<string, LocalLead[]> = {};
+    const grouped: Record<string, Lead[]> = {};
     
     stages.forEach((stage) => {
       grouped[stage.id] = [];
@@ -164,24 +137,25 @@ export const KanbanBoard = () => {
     }
   };
 
-  const handleLeadClick = (lead: LocalLead) => {
+  const handleLeadClick = (lead: Lead) => {
     setSelectedLead(lead);
     setShowDetailsModal(true);
   };
 
-  const handleUpdateLead = useCallback((data: { id: string } & Partial<LocalLead>) => {
-    const { nome, telefone, observacoes, proximo_contato, reuniao_agendada, reuniao_realizada, valor, ...rest } = data;
-    
+  const handleUpdateLead = useCallback((data: { id: string } & Partial<Lead>) => {
     updateLead.mutate({
       id: data.id,
-      name: nome || rest.name,
-      phone: telefone || rest.phone,
-      observations: observacoes || rest.observations,
-      next_contact: proximo_contato || rest.next_contact,
-      meeting_scheduled: reuniao_agendada ?? rest.meeting_scheduled,
-      meeting_done: reuniao_realizada ?? rest.meeting_done,
-      opportunity_value: valor ?? rest.opportunity_value,
-      ...rest,
+      name: data.name,
+      phone: data.phone,
+      email: data.email,
+      observations: data.observations,
+      next_contact: data.next_contact,
+      meeting_scheduled: data.meeting_scheduled,
+      meeting_done: data.meeting_done,
+      no_show: data.no_show,
+      opportunity_value: data.opportunity_value,
+      stage_id: data.stage_id,
+      tags: data.tags || [],
     });
     
     setShowDetailsModal(false);
@@ -195,20 +169,22 @@ export const KanbanBoard = () => {
   }, [deleteLead]);
 
   const handleAddLead = useCallback((data: { 
-    nome: string; 
+    name: string; 
     email?: string; 
-    telefone?: string; 
+    phone?: string; 
     stage_id?: string; 
-    observacoes?: string; 
-    origem?: string 
+    observations?: string; 
+    source?: string;
+    opportunity_value?: number;
   }) => {
     createLead.mutate({
-      name: data.nome,
+      name: data.name,
       email: data.email,
-      phone: data.telefone,
+      phone: data.phone,
       stage_id: data.stage_id || stages[0]?.id,
-      observations: data.observacoes,
-      source: data.origem || "manual",
+      observations: data.observations,
+      source: data.source || "manual",
+      opportunity_value: data.opportunity_value,
     });
     setShowAddModal(false);
   }, [createLead, stages]);
@@ -344,6 +320,7 @@ export const KanbanBoard = () => {
       {/* Modals */}
       <LeadDetailsModal
         lead={selectedLead}
+        stages={stages}
         open={showDetailsModal}
         onClose={() => {
           setShowDetailsModal(false);
@@ -355,6 +332,7 @@ export const KanbanBoard = () => {
 
       <AddLeadModal
         open={showAddModal}
+        stages={stages}
         onClose={() => setShowAddModal(false)}
         onAdd={handleAddLead}
       />
