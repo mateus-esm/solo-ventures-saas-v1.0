@@ -18,7 +18,7 @@ import {
   Check,
   Webhook,
 } from "lucide-react";
-import { PipelineStage } from "./KanbanBoard";
+import { PipelineStage } from "@/types/crm";
 import { toast } from "sonner";
 
 interface StageManagerModalProps {
@@ -196,12 +196,12 @@ export const StageManagerModal = ({
                 <p className="text-xs font-medium mb-2">Exemplo de payload:</p>
                 <pre className="text-xs text-muted-foreground overflow-x-auto">
 {`{
-  "nome": "João Silva",
+  "name": "João Silva",
   "email": "joao@email.com",
-  "telefone": "(11) 99999-0000",
-  "origem": "agente_sdr",
-  "valor": 5000,
-  "observacoes": "Interessado em..."
+  "phone": "(11) 99999-0000",
+  "source": "agente_sdr",
+  "opportunity_value": 5000,
+  "observations": "Interessado em..."
 }`}
                 </pre>
               </div>
