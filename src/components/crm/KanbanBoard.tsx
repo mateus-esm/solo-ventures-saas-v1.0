@@ -219,6 +219,23 @@ export const KanbanBoard = () => {
 
   const isLoading = leadsLoading || stagesLoading;
 
+  // Check if user has no team assigned
+  if (!profile?.equipe_id) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md p-8">
+          <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
+            <Settings className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-semibold text-foreground">Configuração Necessária</h2>
+          <p className="text-muted-foreground">
+            Você ainda não foi atribuído a uma equipe. Entre em contato com o administrador para ser adicionado a uma equipe e começar a usar o CRM.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading && leads.length === 0) {
     return (
       <div className="flex-1 flex items-center justify-center">
