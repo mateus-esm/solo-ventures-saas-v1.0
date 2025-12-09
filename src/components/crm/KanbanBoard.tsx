@@ -25,7 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Lead, PipelineStage } from "@/types/crm";
 
 export const KanbanBoard = () => {
-  const { profile, equipe } = useAuth();
+  const { profile, equipe, loading: authLoading } = useAuth();
   const { 
     leads, 
     isLoading: leadsLoading, 
@@ -218,6 +218,15 @@ export const KanbanBoard = () => {
     : "";
 
   const isLoading = leadsLoading || stagesLoading;
+
+  // Wait for auth to load before checking team
+  if (authLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   // Check if user has no team assigned
   if (!profile?.equipe_id) {
