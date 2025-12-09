@@ -43,7 +43,12 @@ export const usePipelineStages = () => {
   const stagesQuery = useQuery({
     queryKey: ["pipeline_stages", equipeId],
     queryFn: async () => {
-      if (!equipeId) return [];
+      if (!equipeId) {
+        console.log("[usePipelineStages] No equipeId, returning empty array");
+        return [];
+      }
+      
+      console.log("[usePipelineStages] Fetching stages for equipe:", equipeId);
       
       const { data, error } = await supabase
         .from("pipeline_stages")
@@ -51,10 +56,17 @@ export const usePipelineStages = () => {
         .eq("equipe_id", equipeId)
         .order("position", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("[usePipelineStages] Error fetching stages:", error);
+        throw error;
+      }
+      
+      console.log("[usePipelineStages] Fetched stages:", data?.length || 0);
       
       // If no stages exist, create default ones
       if (!data || data.length === 0) {
+        console.log("[usePipelineStages] No stages found, creating defaults for equipe:", equipeId);
+        
         const stagesToCreate = DEFAULT_STAGES.map(stage => ({
           ...stage,
           equipe_id: equipeId,
@@ -66,10 +78,12 @@ export const usePipelineStages = () => {
           .select();
 
         if (createError) {
-          console.error("Error creating default stages:", createError);
+          console.error("[usePipelineStages] Error creating default stages:", createError);
+          toast.error("Erro ao criar etapas padrão: " + createError.message);
           return [];
         }
 
+        console.log("[usePipelineStages] Created default stages:", createdStages?.length || 0);
         return (createdStages || []) as PipelineStage[];
       }
 
