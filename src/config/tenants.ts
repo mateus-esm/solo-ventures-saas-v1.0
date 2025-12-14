@@ -35,12 +35,12 @@ export const tenants: Record<TenantId, TenantConfig> = {
   cb: {
     id: 'cb',
     name: 'CB',
-    nicho: 'contabil',
+    nicho: 'cinemas benfica',
     domain: 'cb.soloventures.com.br',
     logo: '/tenants/cb/logo.png',
     logoLight: '/tenants/cb/logo-light.png',
     primaryColor: '160 60% 45%', // Green
-    description: 'Agente SDR para Contabilidade',
+    description: 'Agente de Suporte do Cinemas Benfica',
   },
   nutria: {
     id: 'nutria',
