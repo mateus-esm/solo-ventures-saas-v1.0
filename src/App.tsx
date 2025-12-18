@@ -15,6 +15,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Chat from "./pages/Chat";
 import CRM from "./pages/CRM";
+import Webhooks from "./pages/Webhooks";
 import Suporte from "./pages/Suporte";
 import Dashboard from "./pages/Dashboard";
 import Billing from "./pages/Billing";
@@ -100,6 +101,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AuthenticatedLayout>
                     <CRM />
+                  </AuthenticatedLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/webhooks"
+              element={
+                <ProtectedRoute>
+                  <AuthenticatedLayout>
+                    <Webhooks />
                   </AuthenticatedLayout>
                 </ProtectedRoute>
               }

@@ -1,4 +1,4 @@
-import { Home, MessageCircle, LayoutDashboard, HelpCircle, LogOut, ExternalLink, CreditCard, BarChart3, BookOpen } from "lucide-react";
+import { Home, MessageCircle, LayoutDashboard, HelpCircle, LogOut, ExternalLink, CreditCard, BarChart3, BookOpen, Webhook } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
@@ -18,6 +18,7 @@ export function AppSidebar() {
     { title: "Dashboard", url: "/dashboard", icon: BarChart3, external: false },
     { title: `Chat ${tenant.name}`, url: isExternalChatLink ? chatHref : chatHref || "/chat", icon: MessageCircle, external: isExternalChatLink },
     { title: "CRM", url: "/crm", icon: LayoutDashboard, external: false },
+    { title: "Webhooks", url: "/webhooks", icon: Webhook, external: false },
     { title: "Billing", url: "/billing", icon: CreditCard, external: false },
     { title: "Suporte", url: "/suporte", icon: HelpCircle, external: false },
     { title: "Tutorial", url: "/tutorial", icon: BookOpen, external: false },
