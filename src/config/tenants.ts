@@ -1,5 +1,13 @@
 export type TenantId = 'advai' | 'solon' | 'cb' | 'nutria' | 'imob' | 'default';
 
+export interface CustomFieldDefinition {
+  key: string;
+  label: string;
+  type: 'text' | 'number' | 'select';
+  options?: string[];
+  placeholder?: string;
+}
+
 export interface TenantConfig {
   id: TenantId;
   name: string;
@@ -9,6 +17,7 @@ export interface TenantConfig {
   logoLight: string;
   primaryColor: string;
   description: string;
+  customFields?: CustomFieldDefinition[];
 }
 
 export const tenants: Record<TenantId, TenantConfig> = {
@@ -21,6 +30,10 @@ export const tenants: Record<TenantId, TenantConfig> = {
     logoLight: '/tenants/advai/logo-light.png',
     primaryColor: '220 70% 50%', // Blue
     description: 'Agente SDR para Escritórios de Advocacia',
+    customFields: [
+      { key: 'numero_processo', label: 'Número do Processo', type: 'text', placeholder: '0000000-00.0000.0.00.0000' },
+      { key: 'area_atuacao', label: 'Área de Atuação', type: 'select', options: ['Trabalhista', 'Cível', 'Criminal', 'Tributário', 'Empresarial', 'Família', 'Outros'] },
+    ],
   },
   solon: {
     id: 'solon',
@@ -31,6 +44,11 @@ export const tenants: Record<TenantId, TenantConfig> = {
     logoLight: '/tenants/solon/logo-light.png',
     primaryColor: '45 100% 50%', // Solar Yellow/Orange
     description: 'Agente SDR para Energia Solar',
+    customFields: [
+      { key: 'consumo_medio', label: 'Consumo Médio (kWh)', type: 'number', placeholder: 'Ex: 500' },
+      { key: 'valor_conta', label: 'Valor da Conta (R$)', type: 'number', placeholder: 'Ex: 350' },
+      { key: 'tipo_telhado', label: 'Tipo de Telhado', type: 'select', options: ['Cerâmica', 'Fibrocimento', 'Metálico', 'Laje', 'Outro'] },
+    ],
   },
   cb: {
     id: 'cb',
@@ -41,6 +59,10 @@ export const tenants: Record<TenantId, TenantConfig> = {
     logoLight: '/tenants/cb/logo-light.png',
     primaryColor: '160 60% 45%', // Green
     description: 'Agente de Suporte do Cinemas Benfica',
+    customFields: [
+      { key: 'filme_interesse', label: 'Filme de Interesse', type: 'text', placeholder: 'Nome do filme' },
+      { key: 'data_sessao', label: 'Data da Sessão', type: 'text', placeholder: 'DD/MM/AAAA' },
+    ],
   },
   nutria: {
     id: 'nutria',
@@ -51,6 +73,10 @@ export const tenants: Record<TenantId, TenantConfig> = {
     logoLight: '/tenants/nutria/logo-light.png',
     primaryColor: '140 70% 45%', // Healthy Green
     description: 'Agente SDR para Nutricionistas',
+    customFields: [
+      { key: 'objetivo', label: 'Objetivo', type: 'select', options: ['Emagrecimento', 'Ganho de Massa', 'Reeducação Alimentar', 'Saúde Geral', 'Outro'] },
+      { key: 'restricao_alimentar', label: 'Restrição Alimentar', type: 'text', placeholder: 'Ex: Intolerância a lactose' },
+    ],
   },
   imob: {
     id: 'imob',
@@ -61,6 +87,11 @@ export const tenants: Record<TenantId, TenantConfig> = {
     logoLight: '/tenants/imob/logo-light.png',
     primaryColor: '200 80% 50%', // Real Estate Blue
     description: 'Agente SDR para Mercado Imobiliário',
+    customFields: [
+      { key: 'tipo_imovel', label: 'Tipo de Imóvel', type: 'select', options: ['Apartamento', 'Casa', 'Terreno', 'Comercial', 'Rural'] },
+      { key: 'bairro_interesse', label: 'Bairro de Interesse', type: 'text', placeholder: 'Ex: Centro' },
+      { key: 'faixa_preco', label: 'Faixa de Preço', type: 'select', options: ['Até R$ 200 mil', 'R$ 200-500 mil', 'R$ 500 mil - 1 milhão', 'Acima de R$ 1 milhão'] },
+    ],
   },
   default: {
     id: 'default',
@@ -71,6 +102,7 @@ export const tenants: Record<TenantId, TenantConfig> = {
     logoLight: '/solo-ventures-icon-512.png',
     primaryColor: '262 83% 58%', // Original Purple
     description: 'Plataforma SoloAI SaaS',
+    customFields: [],
   },
 };
 

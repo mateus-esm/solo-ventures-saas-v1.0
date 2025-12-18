@@ -100,7 +100,9 @@ export type Database = {
           equipe_id: string
           id: string
           interaction_id: string | null
+          meeting_date: string | null
           meeting_done: boolean | null
+          meeting_notes: string | null
           meeting_scheduled: boolean | null
           name: string
           next_contact: string | null
@@ -109,6 +111,7 @@ export type Database = {
           opportunity_value: number | null
           origem: string | null
           phone: string | null
+          responsible_id: string | null
           source: string | null
           stage_id: string | null
           tags: string[] | null
@@ -122,7 +125,9 @@ export type Database = {
           equipe_id: string
           id?: string
           interaction_id?: string | null
+          meeting_date?: string | null
           meeting_done?: boolean | null
+          meeting_notes?: string | null
           meeting_scheduled?: boolean | null
           name: string
           next_contact?: string | null
@@ -131,6 +136,7 @@ export type Database = {
           opportunity_value?: number | null
           origem?: string | null
           phone?: string | null
+          responsible_id?: string | null
           source?: string | null
           stage_id?: string | null
           tags?: string[] | null
@@ -144,7 +150,9 @@ export type Database = {
           equipe_id?: string
           id?: string
           interaction_id?: string | null
+          meeting_date?: string | null
           meeting_done?: boolean | null
+          meeting_notes?: string | null
           meeting_scheduled?: boolean | null
           name?: string
           next_contact?: string | null
@@ -153,6 +161,7 @@ export type Database = {
           opportunity_value?: number | null
           origem?: string | null
           phone?: string | null
+          responsible_id?: string | null
           source?: string | null
           stage_id?: string | null
           tags?: string[] | null
@@ -164,6 +173,13 @@ export type Database = {
             columns: ["equipe_id"]
             isOneToOne: false
             referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -307,6 +323,47 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhook_configs: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          equipe_id: string
+          headers: Json | null
+          id: string
+          name: string
+          trigger_event: string
+          url: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          equipe_id: string
+          headers?: Json | null
+          id?: string
+          name: string
+          trigger_event: string
+          url: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          equipe_id?: string
+          headers?: Json | null
+          id?: string
+          name?: string
+          trigger_event?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_configs_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
             referencedColumns: ["id"]
           },
         ]

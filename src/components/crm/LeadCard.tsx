@@ -2,10 +2,12 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Phone, Mail, Calendar, DollarSign, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Phone, Mail, Calendar, DollarSign, CheckCircle, Clock, XCircle, MessageCircle } from "lucide-react";
 import { Lead } from "@/types/crm";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface LeadCardProps {
   lead: Lead;
@@ -46,6 +48,38 @@ export const LeadCard = ({ lead, onClick }: LeadCardProps) => {
     }
   };
 
+  const cleanPhoneNumber = (phone: string): string => {
+    return phone.replace(/[\s\-\(\)\.]/g, "");
+  };
+
+  const isValidPhoneNumber = (phone: string): boolean => {
+    const cleaned = cleanPhoneNumber(phone);
+    return cleaned.length >= 10 && cleaned.length <= 15;
+  };
+
+  const handleWhatsAppClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!lead.phone) {
+      toast.error("Lead sem telefone cadastrado");
+      return;
+    }
+
+    const cleanedPhone = cleanPhoneNumber(lead.phone);
+    
+    if (!isValidPhoneNumber(lead.phone)) {
+      toast.error("Número de telefone inválido");
+      return;
+    }
+
+    // Add Brazil country code if not present
+    const phoneWithCountry = cleanedPhone.startsWith("55") 
+      ? cleanedPhone 
+      : `55${cleanedPhone}`;
+
+    window.open(`https://wa.me/${phoneWithCountry}`, "_blank");
+  };
+
   return (
     <Card
       ref={setNodeRef}
@@ -65,7 +99,19 @@ export const LeadCard = ({ lead, onClick }: LeadCardProps) => {
         <h4 className="font-medium text-sm text-foreground truncate flex-1">
           {lead.name}
         </h4>
-        {getOrigemBadge(lead.origem)}
+        <div className="flex items-center gap-1.5">
+          {lead.phone && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-green-600 hover:text-green-700 hover:bg-green-100 dark:hover:bg-green-900/30"
+              onClick={handleWhatsAppClick}
+            >
+              <MessageCircle className="h-4 w-4" />
+            </Button>
+          )}
+          {getOrigemBadge(lead.origem)}
+        </div>
       </div>
 
       {/* Contact Info */}

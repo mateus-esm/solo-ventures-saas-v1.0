@@ -19,6 +19,10 @@ export interface Lead {
   origem: string | null;
   atendido_por_agente: boolean | null;
   interaction_id: string | null;
+  // New fields for PRD v2.2
+  responsible_id: string | null;
+  meeting_date: string | null;
+  meeting_notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -52,6 +56,10 @@ export interface CreateLeadData {
   observations?: string;
   source?: string;
   opportunity_value?: number;
+  responsible_id?: string;
+  meeting_date?: string;
+  meeting_notes?: string;
+  custom_fields?: Record<string, unknown>;
 }
 
 export interface UpdateLeadData {
@@ -68,4 +76,25 @@ export interface UpdateLeadData {
   no_show?: boolean;
   opportunity_value?: number | null;
   custom_fields?: Record<string, unknown>;
+  // New fields for PRD v2.2
+  responsible_id?: string | null;
+  meeting_date?: string | null;
+  meeting_notes?: string | null;
+}
+
+export interface WebhookConfig {
+  id: string;
+  equipe_id: string;
+  name: string;
+  url: string;
+  trigger_event: string;
+  active: boolean;
+  headers: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface TeamMember {
+  id: string;
+  nome_completo: string | null;
+  email: string | null;
 }
