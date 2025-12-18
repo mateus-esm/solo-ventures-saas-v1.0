@@ -1,202 +1,103 @@
-# Implementação PRD v2.0 - AdvAI Portal SaaS
+# PRD v2.2 - SoloAI SaaS: CRM Independente & Dashboard Proprietário
 
-## ✅ Implementado com Sucesso
-
-### 1. Correções de Integração API
-
-#### Dashboard (Jestor)
-- ✅ Atualizado para usar tabela correta: `o_apnte00i6bwtdfd2rjc`
-- ✅ Campos mapeados corretamente:
-  - `criado_em` → filtro de período
-  - `status` → filtros de etapas (Agendada, Fechado)
-  - `valor_da_proposta` → soma de valores
-- ✅ Lógica de agregação implementada na Edge Function
-
-#### Billing (GPT Maker)
-- ✅ Atualizado endpoint para workspace: `GET /v2/workspace/{workspaceId}/credits`
-- ✅ Mantido endpoint de agente: `GET /v2/agent/{agentId}/credits-spent`
-- ✅ Campo `workspace_id` adicionado à tabela `equipes`
-
-### 2. Sistema de Planos de Assinatura
-
-#### Tabela `planos` criada com:
-- Solo Starter: R$ 99,90/mês - 1.000 créditos - 1 usuário
-- Pro: R$ 299,00/mês - 5.000 créditos - 5 usuários
-- Scale: R$ 999,00/mês - 20.000 créditos - Ilimitado
-
-#### Tabela `equipes` atualizada com:
-- ✅ `workspace_id` (VARCHAR) - ID do workspace GPT Maker
-- ✅ `plano_id` (INT) - Referência ao plano contratado
-- ✅ `limite_creditos` (INT) - Limite do plano (default: 1000)
-
-### 3. Melhorias de UX/UI
-
-#### Página Billing
-- ✅ Card do plano atual com detalhes
-- ✅ Funcionalidades do plano listadas
-- ✅ Opções de recarga de créditos
-- ✅ Botão WhatsApp para recarga manual
-
-#### Página CRM
-- ✅ Aviso de acesso read-only
-- ✅ Botão para CRM interativo (Jestor direto)
-- ✅ Alerta sobre consumo de assento
-
-#### Nova Página Tutorial
-- ✅ Criada página `/tutorial` completa
-- ✅ Cards de quick start
-- ✅ FAQ com Accordion
-- ✅ Guia de primeiros passos
-- ✅ Melhores práticas
-- ✅ Adicionada ao menu lateral
+**Status:** ✅ IMPLEMENTADO  
+**Data:** 18/12/2025  
+**Versão:** 2.2 (Final)
 
 ---
 
-## ⚠️ Ações Necessárias do Cliente
+## 1. Objetivos Estratégicos
 
-### 1. Configuração de Workspace (URGENTE)
-
-Você precisa configurar o `workspace_id` para cada equipe no Supabase:
-
-```sql
--- Exemplo: Atualizar workspace_id da equipe
-UPDATE public.equipes 
-SET workspace_id = 'seu_workspace_id_aqui'
-WHERE id = 'uuid_da_equipe';
-```
-
-**Como obter o workspace_id:**
-1. Acesse o painel do GPT Maker
-2. Vá em configurações do workspace
-3. Copie o ID do workspace
-
-### 2. Associar Planos às Equipes
-
-Configure qual plano cada equipe está usando:
-
-```sql
--- Exemplo: Atribuir plano Pro à equipe
-UPDATE public.equipes 
-SET plano_id = 2  -- 1=Starter, 2=Pro, 3=Scale
-WHERE id = 'uuid_da_equipe';
-```
-
-### 3. Sistema de Recarga de Créditos
-
-Atualmente implementado com **WhatsApp** (solução simples). Você tem duas opções:
-
-#### Opção A: Manter WhatsApp (Já implementado)
-- ✅ Funcional imediatamente
-- ✅ Sem custos de integração
-- ❌ Processo manual de confirmação
-
-#### Opção B: Integrar Stripe (Recomendado para escala)
-**Vantagens:**
-- Pagamento automático online
-- Geração de faturas automáticas
-- Melhor experiência do usuário
-- Escalável
-
-**Requisitos:**
-1. Criar conta no Stripe
-2. Obter API keys (Secret Key)
-3. Configurar produtos/preços no Stripe
-4. Implementar webhook de confirmação
-
-**Quando escolher Stripe:**
-- Se planeja escalar para múltiplos clientes
-- Se quer automação completa
-- Se o volume de recargas for alto
+1. **Independência Tecnológica**: Eliminar dependência do Jestor 100%
+2. **CRM Acionável**: Ferramenta de trabalho operacional com agendamento e notas
+3. **Dashboard Proprietário**: Métricas nativas do Supabase
 
 ---
 
-## 🔍 Verificações de Funcionamento
+## 2. Fase 1: CRM Independente ✅
 
-### Teste 1: Dashboard
-1. Acesse `/dashboard`
-2. Verifique se os KPIs aparecem
-3. Confirme que os dados estão do mês atual
-4. **Se vazio:** Verifique se há dados na tabela Jestor `o_apnte00i6bwtdfd2rjc`
+### 2.1 Database
 
-### Teste 2: Billing
-1. Acesse `/billing`
-2. Deve mostrar:
-   - Plano atual (se configurado)
-   - Saldo de créditos
-   - Consumo mensal
-3. **Se erro:** Configure `workspace_id` na equipe
+**Tabela `leads` - Novos campos:**
+- `responsible_id` (uuid, FK → profiles.id)
+- `meeting_date` (timestamptz)
+- `meeting_notes` (text)
 
-### Teste 3: Tutorial
-1. Acesse `/tutorial`
-2. Navegue pelo FAQ
-3. Leia os primeiros passos
+**Tabela `webhook_configs` criada**
 
----
+**Índices:** `idx_leads_responsible`, `idx_leads_meeting_date`
 
-## 📋 Checklist de Configuração
+### 2.2 Campos Personalizados por Nicho
 
-### Imediato (Fase 1)
-- [ ] Obter `workspace_id` do GPT Maker
-- [ ] Atualizar tabela `equipes` com `workspace_id`
-- [ ] Atribuir `plano_id` às equipes
-- [ ] Testar Dashboard com dados reais
-- [ ] Testar Billing com dados reais
+| Nicho | Campos |
+|-------|--------|
+| AdvAI | numero_processo, area_atuacao |
+| Solon | consumo_medio, valor_conta, tipo_telhado |
+| CB | filme_interesse, data_sessao |
+| NutriA | objetivo, restricao_alimentar |
+| Imob | tipo_imovel, bairro_interesse, faixa_preco |
 
-### Curto Prazo (Fase 2)
-- [ ] Decidir: WhatsApp ou Stripe para recarga?
-- [ ] Se Stripe: Criar conta e configurar
-- [ ] Definir política de precificação de créditos extras
-- [ ] Treinar equipe para usar Tutorial
+### 2.3 Componentes
 
-### Médio Prazo (Fase 3 - Futuro)
-- [ ] Implementar gestão de múltiplas equipes
-- [ ] Sistema de convites para usuários
-- [ ] Histórico de transações
-- [ ] Relatórios avançados
+- **LeadCard**: Botão WhatsApp com validação
+- **LeadDetailsModal**: Layout 2 colunas (dados + timeline + nova nota)
 
 ---
 
-## 🔐 Segurança
+## 3. Fase 2: Dashboard Proprietário ✅
 
-### Avisos de Segurança
-⚠️ **Detected: Leaked Password Protection Disabled**
-- Não é crítico mas recomendado habilitar
-- Acesse: Supabase Dashboard → Authentication → Policies
-- Habilite "Leaked Password Protection"
+### 3.1 Métricas (6 KPIs)
 
----
+| Métrica | Descrição |
+|---------|-----------|
+| Total de Leads | Leads criados no período |
+| Reuniões Agendadas | meeting_scheduled=true |
+| Reuniões Realizadas | meeting_done=true |
+| No-Shows | no_show=true |
+| Reuniões Hoje | meeting_date = hoje |
+| Valor Pipeline | Soma opportunity_value |
 
-## 📞 Próximos Passos
+### 3.2 Visualizações (4 gráficos)
 
-### O que fazer agora:
-1. **Configure `workspace_id`** (5 minutos)
-2. **Atribua planos** (2 minutos)
-3. **Teste o sistema** (10 minutos)
-4. **Decida sobre Stripe** (reflexão estratégica)
+1. **Leads por Fase** - BarChart horizontal
+2. **Leads ao Longo do Tempo** - LineChart por dia
+3. **Leads por Responsável** - PieChart
+4. **Métricas de Conversão** - Progress bars
 
-### Quando estiver pronto para Stripe:
-Me avise e posso implementar:
-- Integração completa com Stripe
-- Checkout de créditos
-- Webhooks de confirmação
-- Histórico de transações
+### 3.3 Funcionalidades
 
----
-
-## 🎯 Status Final
-
-| Funcionalidade | Status | Observações |
-|----------------|--------|-------------|
-| Dashboard Jestor | ✅ Pronto | Necessita configuração de dados |
-| Billing GPT Maker | ✅ Pronto | Necessita workspace_id |
-| Sistema de Planos | ✅ Pronto | 3 planos configurados |
-| Tutorial | ✅ Pronto | Página completa com FAQ |
-| CRM Warning | ✅ Pronto | Aviso de read-only |
-| Recarga WhatsApp | ✅ Pronto | Funcional |
-| Recarga Stripe | ⏳ Aguardando | Decisão do cliente |
+- ✅ Filtro por período (mês atual, anterior, últimos 3 meses)
+- ✅ Export CSV
+- ✅ Refresh manual
 
 ---
 
-**Última atualização:** Novembro 2025
-**Versão:** 2.0
-**Status:** ✅ 95% Implementado - Aguardando configurações do cliente
+## 4. Arquivos Criados/Modificados
+
+### Hooks:
+- `src/hooks/useDashboardMetrics.ts` ✅
+- `src/hooks/useTeamMembers.ts` ✅
+
+### Componentes:
+- `src/pages/Dashboard.tsx` - Dashboard proprietário
+- `src/components/crm/LeadCard.tsx` - WhatsApp button
+- `src/components/crm/LeadDetailsModal.tsx` - 2-column layout
+
+### Types:
+- `src/types/crm.ts` - Lead, WebhookConfig, TeamMember
+
+### Config:
+- `src/config/tenants.ts` - customFields por nicho
+
+---
+
+## 5. Próximos Passos
+
+- [ ] Filtros no Kanban (por responsável, tags)
+- [ ] Webhooks outbound dispatcher
+- [ ] Integração WhatsApp API
+
+---
+
+**Última atualização:** 18/12/2025  
+**Status:** ✅ 100% Implementado
