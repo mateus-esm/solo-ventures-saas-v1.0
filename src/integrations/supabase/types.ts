@@ -100,6 +100,7 @@ export type Database = {
           equipe_id: string
           id: string
           interaction_id: string | null
+          last_message_at: string | null
           meeting_date: string | null
           meeting_done: boolean | null
           meeting_notes: string | null
@@ -125,6 +126,7 @@ export type Database = {
           equipe_id: string
           id?: string
           interaction_id?: string | null
+          last_message_at?: string | null
           meeting_date?: string | null
           meeting_done?: boolean | null
           meeting_notes?: string | null
@@ -150,6 +152,7 @@ export type Database = {
           equipe_id?: string
           id?: string
           interaction_id?: string | null
+          last_message_at?: string | null
           meeting_date?: string | null
           meeting_done?: boolean | null
           meeting_notes?: string | null
@@ -187,6 +190,60 @@ export type Database = {
             columns: ["stage_id"]
             isOneToOne: false
             referencedRelation: "pipeline_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          external_id: string | null
+          id: string
+          lead_id: string
+          media_type: string | null
+          media_url: string | null
+          read_at: string | null
+          sender_id: string | null
+          sender_type: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          external_id?: string | null
+          id?: string
+          lead_id: string
+          media_type?: string | null
+          media_url?: string | null
+          read_at?: string | null
+          sender_id?: string | null
+          sender_type: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          external_id?: string | null
+          id?: string
+          lead_id?: string
+          media_type?: string | null
+          media_url?: string | null
+          read_at?: string | null
+          sender_id?: string | null
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -320,6 +377,64 @@ export type Database = {
           },
           {
             foreignKeyName: "scheduled_automations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          assigned_to: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          lead_id: string
+          status: string | null
+          title: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          lead_id: string
+          status?: string | null
+          title: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          lead_id?: string
+          status?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_lead_id_fkey"
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
