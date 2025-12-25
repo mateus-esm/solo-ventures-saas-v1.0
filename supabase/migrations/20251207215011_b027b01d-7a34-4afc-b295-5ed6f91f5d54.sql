@@ -1,5 +1,14 @@
 -- Create equipes table (teams/companies)
-CREATE TABLE public.equipes (
+-- Smart creation/migration for equipes
+DO $$ 
+BEGIN
+  -- Handle migration from old schema (nome_cliente -> nome)
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'equipes' AND column_name = 'nome_cliente') THEN
+      ALTER TABLE public.equipes RENAME COLUMN nome_cliente TO nome;
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS public.equipes (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   nome TEXT NOT NULL,
   niche TEXT,
@@ -12,8 +21,16 @@ CREATE TABLE public.equipes (
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
+-- Ensure columns exist if table was already there
+ALTER TABLE public.equipes ADD COLUMN IF NOT EXISTS niche TEXT;
+ALTER TABLE public.equipes ADD COLUMN IF NOT EXISTS gpt_maker_agent_id TEXT;
+ALTER TABLE public.equipes ADD COLUMN IF NOT EXISTS asaas_customer_id TEXT;
+ALTER TABLE public.equipes ADD COLUMN IF NOT EXISTS limite_creditos INTEGER DEFAULT 100;
+ALTER TABLE public.equipes ADD COLUMN IF NOT EXISTS creditos_avulsos INTEGER DEFAULT 0;
+ALTER TABLE public.equipes ADD COLUMN IF NOT EXISTS webhook_secret TEXT DEFAULT gen_random_uuid()::text;
+
 -- Create profiles table (user profiles linked to teams)
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID NOT NULL PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   equipe_id UUID REFERENCES public.equipes(id) ON DELETE SET NULL,
   nome_completo TEXT,
@@ -26,8 +43,13 @@ CREATE TABLE public.profiles (
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
+-- Ensure profiles columns
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS telefone TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS cpf TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS cargo TEXT DEFAULT 'member';
+
 -- Create pipeline_stages table (etapas do funil por equipe)
-CREATE TABLE public.pipeline_stages (
+CREATE TABLE IF NOT EXISTS public.pipeline_stages (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   equipe_id UUID NOT NULL REFERENCES public.equipes(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -38,7 +60,7 @@ CREATE TABLE public.pipeline_stages (
 );
 
 -- Create leads table
-CREATE TABLE public.leads (
+CREATE TABLE IF NOT EXISTS public.leads (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   equipe_id UUID NOT NULL REFERENCES public.equipes(id) ON DELETE CASCADE,
   stage_id UUID REFERENCES public.pipeline_stages(id) ON DELETE SET NULL,
@@ -94,6 +116,7 @@ ALTER TABLE public.lead_activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.scheduled_automations ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for equipes
+DROP POLICY IF EXISTS "Users can view their own team" ON public.equipes;
 CREATE POLICY "Users can view their own team"
 ON public.equipes
 FOR SELECT
@@ -102,17 +125,20 @@ USING (
 );
 
 -- RLS Policies for profiles
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
 CREATE POLICY "Users can view their own profile"
 ON public.profiles
 FOR SELECT
 USING (id = auth.uid());
 
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 CREATE POLICY "Users can update their own profile"
 ON public.profiles
 FOR UPDATE
 USING (id = auth.uid());
 
 -- RLS Policies for pipeline_stages
+DROP POLICY IF EXISTS "Users can view their team stages" ON public.pipeline_stages;
 CREATE POLICY "Users can view their team stages"
 ON public.pipeline_stages
 FOR SELECT
@@ -120,6 +146,7 @@ USING (
   equipe_id IN (SELECT p.equipe_id FROM public.profiles p WHERE p.id = auth.uid())
 );
 
+DROP POLICY IF EXISTS "Users can manage their team stages" ON public.pipeline_stages;
 CREATE POLICY "Users can manage their team stages"
 ON public.pipeline_stages
 FOR ALL
@@ -128,6 +155,7 @@ USING (
 );
 
 -- RLS Policies for leads
+DROP POLICY IF EXISTS "Users can view their team leads" ON public.leads;
 CREATE POLICY "Users can view their team leads"
 ON public.leads
 FOR SELECT
@@ -135,6 +163,7 @@ USING (
   equipe_id IN (SELECT p.equipe_id FROM public.profiles p WHERE p.id = auth.uid())
 );
 
+DROP POLICY IF EXISTS "Users can manage their team leads" ON public.leads;
 CREATE POLICY "Users can manage their team leads"
 ON public.leads
 FOR ALL
@@ -191,6 +220,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
@@ -204,16 +234,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SET search_path = public;
 
+DROP TRIGGER IF EXISTS update_leads_updated_at ON public.leads;
 CREATE TRIGGER update_leads_updated_at
 BEFORE UPDATE ON public.leads
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_equipes_updated_at ON public.equipes;
 CREATE TRIGGER update_equipes_updated_at
 BEFORE UPDATE ON public.equipes
 FOR EACH ROW
 EXECUTE FUNCTION public.update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 CREATE TRIGGER update_profiles_updated_at
 BEFORE UPDATE ON public.profiles
 FOR EACH ROW
