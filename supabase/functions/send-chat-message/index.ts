@@ -7,10 +7,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
   try {
     const supabase = createClient(
@@ -18,83 +15,61 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { lead_id, content, type = 'text', media_url, sender_id } = await req.json()
+    // Recebe dados do Frontend
+    const { content, chat_id, lead_id, action } = await req.json()
+    const token = Deno.env.get('GPT_MAKER_TOKEN')
 
-    console.log('Received message request:', { lead_id, content, type, media_url })
+    // 1. AÇÃO: Assumir ou Encerrar Atendimento (Botão de Ação)
+    if (action === 'take_control' || action === 'stop_control') {
+      const endpoint = action === 'take_control' ? 'start-human' : 'stop-human'
+      const url = `https://api.gptmaker.ai/v2/chat/${chat_id}/${endpoint}`
 
-    // 1. Validate lead exists
-    const { data: lead, error: leadError } = await supabase
-      .from('leads')
-      .select('id, phone, equipe_id')
-      .eq('id', lead_id)
-      .single()
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
 
-    if (leadError || !lead) {
-      console.error('Lead not found:', leadError)
-      throw new Error('Lead não encontrado')
+      if (!response.ok) throw new Error(`Erro GPT Maker: ${await response.text()}`)
+      return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // 2. Save message to database
-    const { data: msg, error: msgError } = await supabase
+    // 2. AÇÃO: Enviar Mensagem de Texto
+    // Primeiro, salvamos no banco para a UI atualizar rápido (Optimistic UI)
+    const { data: msg, error: dbError } = await supabase
       .from('messages')
       .insert({
         lead_id,
         content,
-        sender_type: 'agent',
-        sender_id,
-        media_url,
-        media_type: type
+        sender_type: 'agent', // Mensagem enviada por nós
+        status: 'sending'
       })
       .select()
       .single()
 
-    if (msgError) {
-      console.error('Error inserting message:', msgError)
-      throw msgError
+    if (dbError) throw dbError
+
+    // Agora enviamos para a API Oficial
+    const url = `https://api.gptmaker.ai/v2/chat/${chat_id}/send-message`
+    const gptResponse = await fetch(url, {
+      method: 'POST',
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message: content }) // Payload conforme documentação
+    })
+
+    if (!gptResponse.ok) {
+      // Se falhar, atualiza status no banco para erro
+      await supabase.from('messages').update({ status: 'error' }).eq('id', msg.id)
+      throw new Error(`Erro no envio: ${await gptResponse.text()}`)
     }
 
-    console.log('Message saved:', msg)
-
-    // 3. Update lead's last_message_at to reorder in list
-    const { error: updateError } = await supabase
-      .from('leads')
-      .update({ last_message_at: new Date().toISOString() })
-      .eq('id', lead_id)
-
-    if (updateError) {
-      console.error('Error updating lead last_message_at:', updateError)
-    }
-
-    // 4. Optional: Send to GPT Maker API when configured
-    const gptMakerToken = Deno.env.get('GPT_MAKER_API_TOKEN')
-    if (gptMakerToken && lead.phone) {
-      try {
-        console.log('Sending message to GPT Maker for phone:', lead.phone)
-        const gptResponse = await fetch('https://app.gptmaker.ai/api/v1/chat/send-message', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${gptMakerToken}`
-          },
-          body: JSON.stringify({
-            number: lead.phone,
-            message: content,
-            type: type,
-            url: media_url
-          })
-        })
-
-        if (!gptResponse.ok) {
-          const errorText = await gptResponse.text()
-          console.error('GPT Maker API error:', errorText)
-        } else {
-          console.log('Message sent to GPT Maker successfully')
-        }
-      } catch (gptError) {
-        console.error('Error calling GPT Maker API:', gptError)
-        // Don't throw - message is already saved locally
-      }
-    }
+    // Sucesso: atualiza status
+    await supabase.from('messages').update({ status: 'sent' }).eq('id', msg.id)
 
     return new Response(JSON.stringify(msg), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -102,9 +77,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error('Error in send-chat-message:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
     })
