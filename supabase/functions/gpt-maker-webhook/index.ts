@@ -1,90 +1,89 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
 
-    const payload = await req.json()
-    console.log('Webhook received:', JSON.stringify(payload))
+    const payload = await req.json();
+    console.log('Webhook Payload:', JSON.stringify(payload));
 
-    // O Payload pode ser um array de mensagens ou um objeto único
-    const messages = Array.isArray(payload) ? payload : [payload]
+    // 1. Validação Básica
+    if (!payload.agent_id) throw new Error('agent_id is required');
 
-    for (const msg of messages) {
-      // Ignorar mensagens de sistema que não são relevantes para o chat
-      // (Ajustar conforme necessidade. Ex: conversationNotificationType pode ser útil para saber status)
+    // 2. Identificar a Equipe pelo Agente
+    const { data: equipe } = await supabase
+      .from('equipes')
+      .select('id, nome')
+      .eq('gpt_maker_agent_id', payload.agent_id)
+      .single();
 
-      // Extrair dados chaves
-      const chatId = msg.externalId || msg.transactionId // GPT Maker usa externalId como identificador do lead/conversa muitas vezes
-      // O user disse: "Ou então pegar o chat e listar as mensagens do chat na ordem correta"
-      // E disse para salvar gpt_maker_chat_id no lead.
+    if (!equipe) throw new Error('Agent ID não vinculado a nenhuma equipe');
 
-      if (!chatId) continue;
+    // 3. Identificar ou Criar o Lead (UPSERT pelo Telefone)
+    const phone = payload.telefone || payload.phone;
+    const name = payload.nome || payload.name || 'Lead WhatsApp';
 
-      const role = msg.role === 'assistant' ? 'agent' : 'client' // Normalizar para nosso enum
-      const content = msg.text || (msg.type === 'AUDIO' ? '[Áudio]' : '[Mídia]')
+    // Tenta buscar lead existente
+    let { data: lead } = await supabase
+      .from('leads')
+      .select('id')
+      .eq('phone', phone)
+      .maybeSingle();
 
-      if (!content) continue;
-
-      // 1. Encontrar o Lead pelo gpt_maker_chat_id
-      let { data: lead } = await supabase
+    if (!lead) {
+      // Se não existe, cria
+      const { data: newLead, error: createError } = await supabase
         .from('leads')
-        .select('id, equipe_id')
-        .eq('gpt_maker_chat_id', chatId)
-        .single()
-
-      // Se não achar pelo ID do chat, tente achar pelo telefone se disponível no payload (nem sempre vem)
-      // Se não achar, cria um Lead "Desconhecido" ou ignora? 
-      // Para este MVP, vamos criar se não existir OU logar erro.
-      // O user disse: "A função deve procurar o Lead pelo telefone ou chatId".
-
-      if (!lead) {
-        console.log(`Lead not found for chatId ${chatId}. Trying to find/create...`)
-        // Simplificação: Se não achou, vamos tentar criar um lead novo ou ignorar por enquanto
-        // para não poluir o banco sem dados do cliente.
-        // Mas para o Realtime funcionar, precisamos de um lead_id.
-        // Vamos inserir mensagem sem lead_id? Não, violates FK via de regra.
-        // Vamos logar e pular.
-        console.warn(`Lead not found via gpt_maker_chat_id: ${chatId}. Message skipped.`)
-        continue;
-      }
-
-      // 2. Inserir a mensagem no banco
-      const { error } = await supabase
-        .from('messages')
         .insert({
-          lead_id: lead.id,
-          equipe_id: lead.equipe_id,
-          content: content,
-          sender_type: role,
-          status: 'received', // Já chegou
-          metadata: msg // Salva o JSON original para debug
+          equipe_id: equipe.id,
+          name: name,
+          phone: phone,
+          email: payload.email || null,
+          source: 'whatsapp_bot',
+          last_message_at: new Date().toISOString()
         })
+        .select()
+        .single();
 
-      if (error) console.error('Error inserting message:', error)
+      if (createError) throw createError;
+      lead = newLead;
+    } else {
+      // Se existe, atualiza o timestamp
+      await supabase.from('leads').update({ last_message_at: new Date().toISOString() }).eq('id', lead.id);
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    // 4. Salvar a Mensagem no Chat (CRUCIAL PARA O REALTIME)
+    const messageContent = payload.mensagem || payload.message;
+    if (messageContent) {
+      const { error: msgError } = await supabase.from('messages').insert({
+        lead_id: lead.id,
+        content: messageContent,
+        sender_type: 'customer', // Veio do cliente
+        status: 'delivered'
+      });
+      if (msgError) console.error('Erro ao salvar mensagem:', msgError);
+    }
+
+    return new Response(JSON.stringify({ success: true, lead_id: lead.id }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
-    })
+      status: 200
+    });
 
   } catch (error) {
-    console.error('Webhook Error:', error)
+    console.error('Webhook Error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    })
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
-})
+});
